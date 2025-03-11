@@ -71,7 +71,6 @@ class ClickUpServer {
       
       // Handle task tools
       if (toolName === 'get_tasks') {
-        console.log('Direct handler for get_tasks called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { container_type, container_id, ...params } = args as { 
@@ -148,7 +147,6 @@ class ClickUpServer {
       }
       
       if (toolName === 'get_task_details') {
-        console.log('Direct handler for get_task_details called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { task_id } = args as { task_id: string };
@@ -194,7 +192,6 @@ class ClickUpServer {
       }
       
       if (toolName === 'create_task') {
-        console.log('Direct handler for create_task called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { list_id, ...taskParams } = args as { 
@@ -267,7 +264,6 @@ class ClickUpServer {
       }
       
       if (toolName === 'update_task') {
-        console.log('Direct handler for update_task called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { task_id, ...taskParams } = args as { 
@@ -326,7 +322,6 @@ class ClickUpServer {
       }
       
       if (toolName === 'get_lists') {
-        console.log('Direct handler for get_lists called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { container_type, container_id } = args as { container_type: string; container_id: string };
@@ -392,7 +387,6 @@ class ClickUpServer {
       }
       
       if (toolName === 'get_workspace_seats') {
-        console.log('Direct handler for get_workspace_seats called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { workspace_id } = args as { workspace_id: string };
@@ -439,7 +433,6 @@ class ClickUpServer {
       
       // Handle get_doc_content tool
       if (toolName === 'get_doc_content') {
-        console.log('Direct handler for get_doc_content called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { doc_id, workspace_id } = args as { doc_id: string; workspace_id: string };
@@ -496,7 +489,6 @@ class ClickUpServer {
       
       // Handle get_workspaces tool
       if (toolName === 'get_workspaces') {
-        console.log('Direct handler for get_workspaces called');
         
         try {
           // Create a new auth client
@@ -528,7 +520,6 @@ class ClickUpServer {
       
       // Handle get_spaces tool
       if (toolName === 'get_spaces') {
-        console.log('Direct handler for get_spaces called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { workspace_id } = args as { workspace_id: string };
@@ -575,7 +566,6 @@ class ClickUpServer {
       
       // Handle search_docs tool
       if (toolName === 'search_docs') {
-        console.log('Direct handler for search_docs called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { workspace_id, query, cursor } = args as { workspace_id: string; query: string; cursor?: string };
@@ -634,7 +624,6 @@ class ClickUpServer {
       
       // Handle get_docs_from_workspace tool
       if (toolName === 'get_docs_from_workspace') {
-        console.log('Direct handler for get_docs_from_workspace called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { workspace_id, cursor, deleted, archived, limit } = args as { 
@@ -692,7 +681,6 @@ class ClickUpServer {
       
       // Handle get_doc_pages tool
       if (toolName === 'get_doc_pages') {
-        console.log('Direct handler for get_doc_pages called with args:', JSON.stringify(args, null, 2));
         
         // Type assertion to avoid TypeScript errors
         const { doc_id, workspace_id, content_format } = args as { doc_id: string; workspace_id: string; content_format?: string };
