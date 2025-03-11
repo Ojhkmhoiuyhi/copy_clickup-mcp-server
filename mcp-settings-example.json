@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "clickup": {
+      "command": "node",
+      "args": ["D:/dev/mcp/clickup-server/build/index.js"],
+      "env": {
+        "CLICKUP_API_TOKEN": "your_api_token_here"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
