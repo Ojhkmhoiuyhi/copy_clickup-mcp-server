@@ -10,6 +10,7 @@ import { setupDocResources } from './resources/doc-resources.js';
 import { createClickUpClient } from './clickup-client/index.js';
 import { createDocsClient } from './clickup-client/docs.js';
 import { createAuthClient } from './clickup-client/auth.js';
+import { createTasksClient } from './clickup-client/tasks.js';
 
 // Environment variables are passed to the server through the MCP settings file
 // See mcp-settings-example.json for an example
@@ -63,10 +64,378 @@ class ClickUpServer {
     setupDocTools(this.server);
     setupDocResources(this.server);
     
-    // Add direct handlers for doc tools
+    // Add direct handlers for doc and task tools
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const toolName = request.params.name;
       const args = request.params.arguments;
+      
+      // Handle task tools
+      if (toolName === 'get_tasks') {
+        console.log('Direct handler for get_tasks called with args:', JSON.stringify(args, null, 2));
+        
+        // Type assertion to avoid TypeScript errors
+        const { container_type, container_id, ...params } = args as { 
+          container_type: string; 
+          container_id: string;
+          include_closed?: boolean;
+          page?: number;
+          order_by?: string;
+          reverse?: boolean;
+        };
+        
+        if (!container_type || !container_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: container_type and container_id are required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        try {
+          // Create a new tasks client
+          const tasksClient = createTasksClient(createClickUpClient());
+          
+          let tasks;
+          
+          switch (container_type) {
+            case 'list':
+              const listResult = await tasksClient.getTasksFromList(container_id, params);
+              tasks = listResult.tasks;
+              break;
+            case 'folder':
+              const folderResult = await tasksClient.getTasksFromFolder(container_id, params);
+              tasks = folderResult.tasks;
+              break;
+            case 'space':
+              const spaceResult = await tasksClient.getTasksFromSpace(container_id, params);
+              tasks = spaceResult.tasks;
+              break;
+            default:
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: `Invalid container_type: ${container_type}. Must be one of: list, folder, space`,
+                  },
+                ],
+                isError: true,
+              };
+          }
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(tasks, null, 2),
+              },
+            ],
+          };
+        } catch (error: any) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting tasks: ${error.message}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+      
+      if (toolName === 'get_task_details') {
+        console.log('Direct handler for get_task_details called with args:', JSON.stringify(args, null, 2));
+        
+        // Type assertion to avoid TypeScript errors
+        const { task_id } = args as { task_id: string };
+        
+        if (!task_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: task_id is required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        try {
+          // Create a new tasks client
+          const tasksClient = createTasksClient(createClickUpClient());
+          
+          // Get the task details
+          const task = await tasksClient.getTask(task_id);
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(task, null, 2),
+              },
+            ],
+          };
+        } catch (error: any) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting task details: ${error.message}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+      
+      if (toolName === 'create_task') {
+        console.log('Direct handler for create_task called with args:', JSON.stringify(args, null, 2));
+        
+        // Type assertion to avoid TypeScript errors
+        const { list_id, ...taskParams } = args as { 
+          list_id: string;
+          name: string;
+          description?: string;
+          assignees?: number[];
+          tags?: string[];
+          status?: string;
+          priority?: number;
+          due_date?: number;
+          due_date_time?: boolean;
+          time_estimate?: number;
+          start_date?: number;
+          start_date_time?: boolean;
+          notify_all?: boolean;
+          parent?: string;
+        };
+        
+        if (!list_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: list_id is required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        if (!taskParams.name) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: name is required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        try {
+          // Create a new tasks client
+          const tasksClient = createTasksClient(createClickUpClient());
+          
+          // Create the task
+          const task = await tasksClient.createTask(list_id, taskParams);
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(task, null, 2),
+              },
+            ],
+          };
+        } catch (error: any) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error creating task: ${error.message}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+      
+      if (toolName === 'update_task') {
+        console.log('Direct handler for update_task called with args:', JSON.stringify(args, null, 2));
+        
+        // Type assertion to avoid TypeScript errors
+        const { task_id, ...taskParams } = args as { 
+          task_id: string;
+          name?: string;
+          description?: string;
+          assignees?: number[];
+          status?: string;
+          priority?: number;
+          due_date?: number;
+          due_date_time?: boolean;
+          time_estimate?: number;
+          start_date?: number;
+          start_date_time?: boolean;
+          notify_all?: boolean;
+        };
+        
+        if (!task_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: task_id is required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        try {
+          // Create a new tasks client
+          const tasksClient = createTasksClient(createClickUpClient());
+          
+          // Update the task
+          const task = await tasksClient.updateTask(task_id, taskParams);
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(task, null, 2),
+              },
+            ],
+          };
+        } catch (error: any) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error updating task: ${error.message}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+      
+      if (toolName === 'get_lists') {
+        console.log('Direct handler for get_lists called with args:', JSON.stringify(args, null, 2));
+        
+        // Type assertion to avoid TypeScript errors
+        const { container_type, container_id } = args as { container_type: string; container_id: string };
+        
+        if (!container_type || !container_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: container_type and container_id are required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        try {
+          // Create a new auth client
+          const authClient = createAuthClient(createClickUpClient());
+          
+          let lists;
+          
+          switch (container_type) {
+            case 'folder':
+              const folderResult = await authClient.getLists(container_id);
+              lists = folderResult.lists;
+              break;
+            case 'space':
+              const spaceResult = await authClient.getListsFromSpace(container_id);
+              lists = spaceResult.lists;
+              break;
+            default:
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: `Invalid container_type: ${container_type}. Must be one of: folder, space`,
+                  },
+                ],
+                isError: true,
+              };
+          }
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(lists, null, 2),
+              },
+            ],
+          };
+        } catch (error: any) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting lists: ${error.message}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+      
+      if (toolName === 'get_workspace_seats') {
+        console.log('Direct handler for get_workspace_seats called with args:', JSON.stringify(args, null, 2));
+        
+        // Type assertion to avoid TypeScript errors
+        const { workspace_id } = args as { workspace_id: string };
+        
+        if (!workspace_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: workspace_id is required',
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        try {
+          // Create a new auth client
+          const authClient = createAuthClient(createClickUpClient());
+          
+          // Get the workspace seats
+          const result = await authClient.getWorkspaceSeats(workspace_id);
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error: any) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting workspace seats: ${error.message}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
       
       // Handle get_doc_content tool
       if (toolName === 'get_doc_content') {

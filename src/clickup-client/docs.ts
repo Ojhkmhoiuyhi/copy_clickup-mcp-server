@@ -49,25 +49,18 @@ export class DocsClient {
     const apiToken = process.env.CLICKUP_API_TOKEN;
     
     try {
-      // Log the exact URL and parameters being used
       const url = `https://api.clickup.com/api/v3/workspaces/${workspaceId}/docs`;
-      
-      console.log('Getting docs with URL:', url);
-      console.log('Params:', params);
       
       // Use the exact same headers that worked in the successful request
       const headers = {
         'Authorization': apiToken,
         'Accept': 'application/json'
       };
-      console.log('Headers:', headers);
       
       const response = await axios.get(url, {
         headers,
         params
       });
-      
-      console.log('Get docs response:', JSON.stringify(response.data, null, 2));
       
       return response.data;
     } catch (error) {
@@ -88,11 +81,7 @@ export class DocsClient {
     // Get the API token directly from the environment variable
     const apiToken = process.env.CLICKUP_API_TOKEN;
     
-    // Log the API token for debugging
-    console.log('Using API token:', apiToken);
-    
     try {
-      // Log the exact URL and parameters being used
       const url = `https://api.clickup.com/api/v3/workspaces/${workspaceId}/docs/${docId}/pages`;
       
       // Use the exact same parameters that worked in the successful request
@@ -100,22 +89,17 @@ export class DocsClient {
         max_page_depth: -1,
         content_format: contentFormat
       };
-      console.log('Getting doc pages with URL:', url);
-      console.log('Params:', params);
       
       // Use the exact same headers that worked in the successful request
       const headers = {
         'Authorization': apiToken,
         'Accept': 'application/json'
       };
-      console.log('Headers:', headers);
       
       const response = await axios.get(url, {
         headers,
         params
       });
-      
-      console.log('Doc pages response:', JSON.stringify(response.data, null, 2));
       
       return response.data;
     } catch (error) {
@@ -140,15 +124,11 @@ export class DocsClient {
       // where team_id is the workspace ID
       const url = `https://api.clickup.com/api/v2/team/${workspaceId}/docs/search`;
       
-      console.log('Searching docs with URL:', url);
-      console.log('Params:', params);
-      
       // Use the exact same headers that worked in the successful request
       const headers = {
         'Authorization': apiToken,
         'Accept': 'application/json'
       };
-      console.log('Headers:', headers);
       
       // According to the ClickUp API documentation, this should be a GET request
       // with the parameters as query parameters
@@ -168,8 +148,6 @@ export class DocsClient {
         headers,
         params: queryParams
       });
-      
-      console.log('Search docs response:', JSON.stringify(response.data, null, 2));
       
       return response.data;
     } catch (error) {

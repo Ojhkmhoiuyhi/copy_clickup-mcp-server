@@ -75,8 +75,5 @@ export const createClickUpClient = (): ClickUpClient => {
     throw new Error('CLICKUP_API_TOKEN environment variable is required');
   }
   
-  // Log the API token for debugging
-  console.log('Creating ClickUp client with API token:', apiToken);
-  
   return new ClickUpClient({ apiToken });
 };
