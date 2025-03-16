@@ -52,8 +52,8 @@ This enables AI assistants to seamlessly interact with ClickUp data and function
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/nsxdavid/clickup-server.git
-   cd clickup-server
+   git clone https://github.com/nsxdavid/clickup-mcp-server.git
+   cd clickup-mcp-server
    ```
 
 2. Install dependencies:
@@ -107,7 +107,7 @@ To use this server with an MCP client (like Claude), you need to configure it in
   "mcpServers": {
     "clickup": {
       "command": "node",
-      "args": ["path/to/clickup-server/build/index.js"],
+      "args": ["path/to/clickup-mcp-server/build/index.js"],
       "env": {
         "CLICKUP_API_TOKEN": "your_api_token_here"
       },
@@ -345,7 +345,7 @@ The server exposes ClickUp data through URI-addressable resources:
 The server follows a modular architecture organized by ClickUp entity types:
 
 ```
-clickup-server/
+clickup-mcp-server/
 ├── src/
 │   ├── index.ts                 # Main server entry point
 │   ├── app.ts                   # Express app setup (for HTTP transport)

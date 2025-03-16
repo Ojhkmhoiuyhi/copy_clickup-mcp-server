@@ -54,7 +54,7 @@ To create your own client that uses the ClickUp MCP Server:
 
    const transport = new StdioClientTransport({
      command: 'node',
-     args: ['path/to/clickup-server/build/index.js'],
+     args: ['path/to/clickup-mcp-server/build/index.js'],
      env: {
        CLICKUP_API_TOKEN: 'your_api_token_here'
      }
