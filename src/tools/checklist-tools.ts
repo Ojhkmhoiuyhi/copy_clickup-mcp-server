@@ -1,502 +1,167 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import {
-  CallToolRequestSchema,
-  ErrorCode,
-  McpError,
-} from '@modelcontextprotocol/sdk/types.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
 import { createClickUpClient } from '../clickup-client/index.js';
-import { createChecklistsClient, Checklist, ChecklistItem, CreateChecklistParams, UpdateChecklistParams, CreateChecklistItemParams, UpdateChecklistItemParams } from '../clickup-client/checklists.js';
+import { createChecklistsClient, CreateChecklistParams, UpdateChecklistParams, CreateChecklistItemParams, UpdateChecklistItemParams } from '../clickup-client/checklists.js';
 
 // Create clients
 const clickUpClient = createClickUpClient();
 const checklistsClient = createChecklistsClient(clickUpClient);
 
-// Tool definitions
-export const CHECKLIST_TOOLS = [
-  {
-    name: 'create_checklist',
-    description: 'Create a new checklist in a task',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        task_id: {
-          type: 'string',
-          description: 'The ID of the task to create the checklist in',
-        },
-        name: {
-          type: 'string',
-          description: 'The name of the checklist',
-        },
-      },
-      required: ['task_id', 'name'],
+export function setupChecklistTools(server: McpServer): void {
+  // Register create_checklist tool
+  server.tool(
+    'create_checklist',
+    {
+      task_id: z.string().describe('The ID of the task to create the checklist in'),
+      name: z.string().describe('The name of the checklist')
     },
-  },
-  {
-    name: 'update_checklist',
-    description: 'Update an existing checklist',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        checklist_id: {
-          type: 'string',
-          description: 'The ID of the checklist to update',
-        },
-        name: {
-          type: 'string',
-          description: 'The new name of the checklist',
-        },
-      },
-      required: ['checklist_id', 'name'],
-    },
-  },
-  {
-    name: 'delete_checklist',
-    description: 'Delete a checklist',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        checklist_id: {
-          type: 'string',
-          description: 'The ID of the checklist to delete',
-        },
-      },
-      required: ['checklist_id'],
-    },
-  },
-  {
-    name: 'create_checklist_item',
-    description: 'Create a new checklist item in a checklist',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        checklist_id: {
-          type: 'string',
-          description: 'The ID of the checklist to create the item in',
-        },
-        name: {
-          type: 'string',
-          description: 'The name of the checklist item',
-        },
-        assignee: {
-          type: 'number',
-          description: 'The ID of the user to assign to the checklist item',
-        },
-        resolved: {
-          type: 'boolean',
-          description: 'Whether the checklist item is resolved',
-        },
-      },
-      required: ['checklist_id', 'name'],
-    },
-  },
-  {
-    name: 'update_checklist_item',
-    description: 'Update an existing checklist item',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        checklist_id: {
-          type: 'string',
-          description: 'The ID of the checklist containing the item',
-        },
-        checklist_item_id: {
-          type: 'string',
-          description: 'The ID of the checklist item to update',
-        },
-        name: {
-          type: 'string',
-          description: 'The new name of the checklist item',
-        },
-        assignee: {
-          type: 'number',
-          description: 'The ID of the user to assign to the checklist item',
-        },
-        resolved: {
-          type: 'boolean',
-          description: 'Whether the checklist item is resolved',
-        },
-      },
-      required: ['checklist_id', 'checklist_item_id'],
-    },
-  },
-  {
-    name: 'delete_checklist_item',
-    description: 'Delete a checklist item',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        checklist_id: {
-          type: 'string',
-          description: 'The ID of the checklist containing the item',
-        },
-        checklist_item_id: {
-          type: 'string',
-          description: 'The ID of the checklist item to delete',
-        },
-      },
-      required: ['checklist_id', 'checklist_item_id'],
-    },
-  },
-];
-
-export function setupChecklistTools(server: Server): (request: any) => Promise<any> {
-  // Return the handler function instead of registering it directly
-  const checklistToolHandler = async (request: any) => {
-    const toolName = request.params.name;
-    const args = request.params.arguments;
-
-    try {
-      switch (toolName) {
-        case 'create_checklist':
-          return await handleCreateChecklist(args);
-        case 'update_checklist':
-          return await handleUpdateChecklist(args);
-        case 'delete_checklist':
-          return await handleDeleteChecklist(args);
-        case 'create_checklist_item':
-          return await handleCreateChecklistItem(args);
-        case 'update_checklist_item':
-          return await handleUpdateChecklistItem(args);
-        case 'delete_checklist_item':
-          return await handleDeleteChecklistItem(args);
-        default:
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Unknown checklist tool: ${toolName}`,
-              },
-            ],
-            isError: true,
-          };
+    async ({ task_id, name }) => {
+      try {
+        const checklist = await checklistsClient.createChecklist(task_id, { name } as CreateChecklistParams);
+        
+        return {
+          content: [{ type: 'text', text: JSON.stringify(checklist, null, 2) }]
+        };
+      } catch (error: any) {
+        console.error('Error creating checklist:', error);
+        return {
+          content: [{ type: 'text', text: `Error creating checklist: ${error.message}` }],
+          isError: true
+        };
       }
-    } catch (error: any) {
-      console.error(`Error in checklist tool ${toolName}:`, error);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error: ${error.message}`,
-          },
-        ],
-        isError: true,
-      };
     }
-  };
+  );
 
-  return checklistToolHandler;
-}
-
-// Handler implementations
-
-async function handleCreateChecklist(args: any) {
-  const { task_id, items, ...checklistParams } = args;
-  
-  if (!task_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'task_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  if (!checklistParams.name) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'name is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  // Note: The ClickUp API doesn't support creating items when creating a checklist
-  // If items were provided, log a warning
-  if (items) {
-    console.warn('The ClickUp API does not support creating checklist items when creating a checklist. Items must be created separately using the create_checklist_item tool.');
-  }
-  
-  try {
-    const checklist = await checklistsClient.createChecklist(task_id, checklistParams as CreateChecklistParams);
-    
-    // If items were provided, add a note in the response
-    let responseText = JSON.stringify(checklist, null, 2);
-    if (items) {
-      responseText = `Note: The ClickUp API does not support creating checklist items when creating a checklist. Items must be created separately using the create_checklist_item tool.\n\n${responseText}`;
+  // Register update_checklist tool
+  server.tool(
+    'update_checklist',
+    {
+      checklist_id: z.string().describe('The ID of the checklist to update'),
+      name: z.string().describe('The new name of the checklist')
+    },
+    async ({ checklist_id, name }) => {
+      try {
+        const checklist = await checklistsClient.updateChecklist(checklist_id, { name });
+        
+        return {
+          content: [{ type: 'text', text: JSON.stringify(checklist, null, 2) }]
+        };
+      } catch (error: any) {
+        console.error('Error updating checklist:', error);
+        return {
+          content: [{ type: 'text', text: `Error updating checklist: ${error.message}` }],
+          isError: true
+        };
+      }
     }
-    
-    return {
-      content: [
-        {
-          type: 'text',
-          text: responseText,
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error('Error creating checklist:', error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error creating checklist: ${error.message}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-}
+  );
 
-async function handleUpdateChecklist(args: any) {
-  const { checklist_id, name } = args;
-  
-  if (!checklist_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  if (!name) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'name is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  try {
-    const checklist = await checklistsClient.updateChecklist(checklist_id, { name });
-    
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(checklist, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error('Error updating checklist:', error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error updating checklist: ${error.message}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-}
+  // Register delete_checklist tool
+  server.tool(
+    'delete_checklist',
+    {
+      checklist_id: z.string().describe('The ID of the checklist to delete')
+    },
+    async ({ checklist_id }) => {
+      try {
+        const result = await checklistsClient.deleteChecklist(checklist_id);
+        
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error: any) {
+        console.error('Error deleting checklist:', error);
+        return {
+          content: [{ type: 'text', text: `Error deleting checklist: ${error.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
 
-async function handleDeleteChecklist(args: any) {
-  const { checklist_id } = args;
-  
-  if (!checklist_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  try {
-    const result = await checklistsClient.deleteChecklist(checklist_id);
-    
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error('Error deleting checklist:', error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error deleting checklist: ${error.message}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-}
+  // Register create_checklist_item tool
+  server.tool(
+    'create_checklist_item',
+    {
+      checklist_id: z.string().describe('The ID of the checklist to create the item in'),
+      name: z.string().describe('The name of the checklist item'),
+      assignee: z.number().optional().describe('The ID of the user to assign to the checklist item'),
+      resolved: z.boolean().optional().describe('Whether the checklist item is resolved')
+    },
+    async ({ checklist_id, name, assignee, resolved }) => {
+      try {
+        const itemParams: CreateChecklistItemParams = { name };
+        if (assignee !== undefined) itemParams.assignee = assignee;
+        if (resolved !== undefined) itemParams.resolved = resolved;
+        
+        const checklistItem = await checklistsClient.createChecklistItem(checklist_id, itemParams);
+        
+        return {
+          content: [{ type: 'text', text: JSON.stringify(checklistItem, null, 2) }]
+        };
+      } catch (error: any) {
+        console.error('Error creating checklist item:', error);
+        return {
+          content: [{ type: 'text', text: `Error creating checklist item: ${error.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
 
-async function handleCreateChecklistItem(args: any) {
-  const { checklist_id, ...itemParams } = args;
-  
-  if (!checklist_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  if (!itemParams.name) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'name is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  try {
-    const checklistItem = await checklistsClient.createChecklistItem(checklist_id, itemParams as CreateChecklistItemParams);
-    
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(checklistItem, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error('Error creating checklist item:', error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error creating checklist item: ${error.message}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-}
+  // Register update_checklist_item tool
+  server.tool(
+    'update_checklist_item',
+    {
+      checklist_id: z.string().describe('The ID of the checklist containing the item'),
+      checklist_item_id: z.string().describe('The ID of the checklist item to update'),
+      name: z.string().optional().describe('The new name of the checklist item'),
+      assignee: z.number().optional().describe('The ID of the user to assign to the checklist item'),
+      resolved: z.boolean().optional().describe('Whether the checklist item is resolved')
+    },
+    async ({ checklist_id, checklist_item_id, name, assignee, resolved }) => {
+      try {
+        const itemParams: UpdateChecklistItemParams = {};
+        if (name !== undefined) itemParams.name = name;
+        if (assignee !== undefined) itemParams.assignee = assignee;
+        if (resolved !== undefined) itemParams.resolved = resolved;
+        
+        const checklistItem = await checklistsClient.updateChecklistItem(checklist_id, checklist_item_id, itemParams);
+        
+        return {
+          content: [{ type: 'text', text: JSON.stringify(checklistItem, null, 2) }]
+        };
+      } catch (error: any) {
+        console.error('Error updating checklist item:', error);
+        return {
+          content: [{ type: 'text', text: `Error updating checklist item: ${error.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
 
-async function handleUpdateChecklistItem(args: any) {
-  const { checklist_id, checklist_item_id, ...itemParams } = args;
-  
-  if (!checklist_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  if (!checklist_item_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_item_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  try {
-    const checklistItem = await checklistsClient.updateChecklistItem(checklist_id, checklist_item_id, itemParams as UpdateChecklistItemParams);
-    
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(checklistItem, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error('Error updating checklist item:', error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error updating checklist item: ${error.message}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-}
-
-async function handleDeleteChecklistItem(args: any) {
-  const { checklist_id, checklist_item_id } = args;
-  
-  if (!checklist_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  if (!checklist_item_id) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'checklist_item_id is required',
-        },
-      ],
-      isError: true,
-    };
-  }
-  
-  try {
-    const result = await checklistsClient.deleteChecklistItem(checklist_id, checklist_item_id);
-    
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error('Error deleting checklist item:', error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error deleting checklist item: ${error.message}`,
-        },
-      ],
-      isError: true,
-    };
-  }
+  // Register delete_checklist_item tool
+  server.tool(
+    'delete_checklist_item',
+    {
+      checklist_id: z.string().describe('The ID of the checklist containing the item'),
+      checklist_item_id: z.string().describe('The ID of the checklist item to delete')
+    },
+    async ({ checklist_id, checklist_item_id }) => {
+      try {
+        const result = await checklistsClient.deleteChecklistItem(checklist_id, checklist_item_id);
+        
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error: any) {
+        console.error('Error deleting checklist item:', error);
+        return {
+          content: [{ type: 'text', text: `Error deleting checklist item: ${error.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
 }

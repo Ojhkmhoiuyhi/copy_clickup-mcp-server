@@ -1,11 +1,4 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import {
-  ErrorCode,
-  ListResourcesRequestSchema,
-  ListResourceTemplatesRequestSchema,
-  McpError,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createClickUpClient } from '../clickup-client/index.js';
 import { createFoldersClient } from '../clickup-client/folders.js';
 
@@ -13,121 +6,123 @@ import { createFoldersClient } from '../clickup-client/folders.js';
 const clickUpClient = createClickUpClient();
 const foldersClient = createFoldersClient(clickUpClient);
 
-// URI patterns
-const SPACE_FOLDERS_URI_PATTERN = /^clickup:\/\/space\/([^/]+)\/folders$/;
-const FOLDER_URI_PATTERN = /^clickup:\/\/folder\/([^/]+)$/;
-
-export function setupFolderResources(server: Server): void {
-  // Register the list of available resources
-  server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    return {
-      resources: [],
-    };
-  });
-
-  // Register the list of available resource templates
-  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
-    return {
-      resourceTemplates: [
-        {
-          uriTemplate: 'clickup://space/{space_id}/folders',
-          name: 'Space folders',
-          mimeType: 'application/json',
-          description: 'Folders in a specific space',
-        },
-        {
-          uriTemplate: 'clickup://folder/{folder_id}',
-          name: 'Folder details',
-          mimeType: 'application/json',
-          description: 'Details of a specific folder',
-        },
-      ],
-    };
-  });
-
-  // Handle resource reads
-  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    const uri = request.params.uri;
-    console.log(`[FolderResources] Handling resource read for URI: ${uri}`);
-    
-    // Check if this is a space folders resource
-    const spaceFoldersMatch = uri.match(SPACE_FOLDERS_URI_PATTERN);
-    if (spaceFoldersMatch) {
-      const spaceId = spaceFoldersMatch[1];
-      console.log(`[FolderResources] Matched space folders pattern, spaceId: ${spaceId}`);
-      const result = await handleSpaceFoldersResource(spaceId);
-      console.log(`[FolderResources] Result from handleSpaceFoldersResource:`, result);
-      return result;
+export function setupFolderResources(server: McpServer): void {
+  // Register space folders resource
+  server.resource(
+    'space-folders',
+    new ResourceTemplate('clickup://space/{space_id}/folders', { list: undefined }),
+    async (uri, params) => {
+      try {
+        const space_id = params.space_id as string;
+        console.log(`[FolderResources] Fetching folders for space: ${space_id}`);
+        const foldersResponse = await foldersClient.getFoldersFromSpace(space_id);
+        console.log(`[FolderResources] Got folders:`, foldersResponse);
+        
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: 'application/json',
+              text: JSON.stringify(foldersResponse, null, 2),
+            },
+          ],
+        };
+      } catch (error: any) {
+        console.error(`[FolderResources] Error fetching space folders:`, error);
+        throw new Error(`Error fetching space folders: ${error.message}`);
+      }
     }
-    
-    // Check if this is a folder resource
-    const folderMatch = uri.match(FOLDER_URI_PATTERN);
-    if (folderMatch) {
-      const folderId = folderMatch[1];
-      console.log(`[FolderResources] Matched folder pattern, folderId: ${folderId}`);
-      const result = await handleFolderResource(folderId);
-      console.log(`[FolderResources] Result from handleFolderResource:`, result);
-      return result;
+  );
+
+  // Register folder details resource
+  server.resource(
+    'folder-details',
+    new ResourceTemplate('clickup://folder/{folder_id}', { list: undefined }),
+    async (uri, params) => {
+      try {
+        const folder_id = params.folder_id as string;
+        console.log(`[FolderResources] Fetching folder: ${folder_id}`);
+        
+        // Note: The ClickUp API doesn't have a direct endpoint to get folder details
+        // We would need to implement this in the foldersClient if API supports it
+        // For now, return a placeholder response
+        
+        // Create a folder object with the ID and a message
+        const folder = {
+          id: folder_id,
+          message: "Folder details endpoint not available in ClickUp API"
+        };
+        
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: 'application/json',
+              text: JSON.stringify(folder, null, 2),
+            },
+          ],
+        };
+      } catch (error: any) {
+        console.error(`[FolderResources] Error fetching folder:`, error);
+        throw new Error(`Error fetching folder: ${error.message}`);
+      }
     }
-    
-    // If no match, return an empty object to let other handlers process it
-    console.log(`[FolderResources] No match for URI: ${uri}`);
-    return {};
-  });
-}
+  );
 
-async function handleSpaceFoldersResource(spaceId: string) {
-  try {
-    console.log(`[FolderResources] Fetching folders for space: ${spaceId}`);
-    // The getFoldersFromSpace method already returns an object with a 'folders' property
-    const foldersResponse = await foldersClient.getFoldersFromSpace(spaceId);
-    console.log(`[FolderResources] Got folders:`, foldersResponse);
-    
-    return {
-      contents: [
-        {
-          uri: `clickup://space/${spaceId}/folders`,
-          mimeType: 'application/json',
-          text: JSON.stringify(foldersResponse, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error(`[FolderResources] Error fetching space folders:`, error);
-    throw new McpError(
-      ErrorCode.InternalError,
-      `Error fetching space folders: ${error.message}`
-    );
-  }
-}
+  // Add some example static resources for discoverability
+  server.resource(
+    'example-space-folders',
+    'clickup://space/90113637923/folders',
+    async (uri) => {
+      try {
+        const space_id = '90113637923';
+        console.log(`[FolderResources] Fetching folders for example space: ${space_id}`);
+        const foldersResponse = await foldersClient.getFoldersFromSpace(space_id);
+        console.log(`[FolderResources] Got folders:`, foldersResponse);
+        
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: 'application/json',
+              text: JSON.stringify(foldersResponse, null, 2),
+            },
+          ],
+        };
+      } catch (error: any) {
+        console.error(`[FolderResources] Error fetching example space folders:`, error);
+        throw new Error(`Error fetching example space folders: ${error.message}`);
+      }
+    }
+  );
 
-async function handleFolderResource(folderId: string) {
-  try {
-    console.log(`[FolderResources] Fetching folder: ${folderId}`);
-    // Note: The ClickUp API doesn't have a direct endpoint to get folder details
-    // We would need to implement this in the foldersClient if API supports it
-    // For now, return a placeholder response
-    
-    // Create a folder object with the ID and a message
-    const folder = {
-      id: folderId,
-      message: "Folder details endpoint not available in ClickUp API"
-    };
-    
-    return {
-      contents: [
-        {
-          uri: `clickup://folder/${folderId}`,
-          mimeType: 'application/json',
-          text: JSON.stringify(folder, null, 2),
-        },
-      ],
-    };
-  } catch (error: any) {
-    console.error(`[FolderResources] Error fetching folder:`, error);
-    throw new McpError(
-      ErrorCode.InternalError,
-      `Error fetching folder: ${error.message}`
-    );
-  }
+  server.resource(
+    'example-folder',
+    'clickup://folder/90115795569',
+    async (uri) => {
+      try {
+        const folder_id = '90115795569';
+        console.log(`[FolderResources] Fetching example folder: ${folder_id}`);
+        
+        // Create a folder object with the ID and a message
+        const folder = {
+          id: folder_id,
+          message: "Folder details endpoint not available in ClickUp API"
+        };
+        
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: 'application/json',
+              text: JSON.stringify(folder, null, 2),
+            },
+          ],
+        };
+      } catch (error: any) {
+        console.error(`[FolderResources] Error fetching example folder:`, error);
+        throw new Error(`Error fetching example folder: ${error.message}`);
+      }
+    }
+  );
 }

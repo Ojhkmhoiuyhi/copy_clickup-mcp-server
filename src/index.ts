@@ -1,50 +1,30 @@
 #!/usr/bin/env node
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { setupTaskTools, TASK_TOOLS } from './tools/task-tools.js';
-import { setupDocTools, DOC_TOOLS } from './tools/doc-tools.js';
-import { setupSpaceTools, SPACE_TOOLS } from './tools/space-tools.js';
-import { setupChecklistTools, CHECKLIST_TOOLS } from './tools/checklist-tools.js';
-import { setupCommentTools, COMMENT_TOOLS } from './tools/comment-tools.js';
+import { setupTaskTools } from './tools/task-tools.js';
+import { setupDocTools } from './tools/doc-tools.js';
+import { setupSpaceTools } from './tools/space-tools.js';
+import { setupChecklistTools } from './tools/checklist-tools.js';
+import { setupCommentTools } from './tools/comment-tools.js';
 import { setupTaskResources } from './resources/task-resources.js';
 import { setupDocResources } from './resources/doc-resources.js';
 import { setupChecklistResources } from './resources/checklist-resources.js';
-import { setupCommentResources, COMMENT_RESOURCES } from './resources/comment-resources.js';
+import { setupCommentResources } from './resources/comment-resources.js';
 import { setupSpaceResources } from './resources/space-resources.js';
 import { setupFolderResources } from './resources/folder-resources.js';
-import { setupListResources, LIST_RESOURCES } from './resources/list-resources.js';
+import { setupListResources } from './resources/list-resources.js';
 
 // Environment variables are passed to the server through the MCP settings file
 // See mcp-settings-example.json for an example
 
 class ClickUpServer {
-  private server: Server;
-  private taskToolHandler: any;
-  private docToolHandler: any;
-  private spaceToolHandler: any;
-  private checklistToolHandler: any;
-  private commentToolHandler: any;
+  private server: McpServer;
 
   constructor() {
-    this.server = new Server(
-      {
-        name: 'clickup-server',
-        version: '1.4.0',
-      },
-      {
-        capabilities: {
-          resources: {
-            list: true,
-            read: true,
-          },
-          tools: {},
-        },
-      }
-    );
-
-    // Set up error handling
-    this.server.onerror = (error) => console.error('[MCP Error]', error);
+    this.server = new McpServer({
+      name: 'clickup-server',
+      version: '1.5.0',
+    });
     
     // Handle process termination
     process.on('SIGINT', async () => {
@@ -53,96 +33,25 @@ class ClickUpServer {
     });
 
     // Set up tools and resources
-    this.setupHandlers();
+    this.setupTools();
+    this.setupResources();
   }
 
-  private setupHandlers() {
-    // Register a combined list of all tools
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      return {
-        tools: [...TASK_TOOLS, ...DOC_TOOLS, ...SPACE_TOOLS, ...CHECKLIST_TOOLS, ...COMMENT_TOOLS],
-      };
-    });
+  private setupTools() {
+    // Set up all tools
+    setupTaskTools(this.server);
+    setupDocTools(this.server);
+    setupSpaceTools(this.server);
+    setupChecklistTools(this.server);
+    setupCommentTools(this.server);
+  }
 
-    // Register a combined list of all resources
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      return {
-        resources: [
-          ...LIST_RESOURCES,
-          ...COMMENT_RESOURCES,
-          // Add other resource exports as they're implemented
-        ],
-      };
-    });
-
-    // Central handler for all tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const toolName = request.params.name;
-      
-      // Determine which category this tool belongs to
-      const isTaskTool = TASK_TOOLS.some(tool => tool.name === toolName);
-      const isDocTool = DOC_TOOLS.some(tool => tool.name === toolName);
-      const isSpaceTool = SPACE_TOOLS.some(tool => tool.name === toolName);
-      const isChecklistTool = CHECKLIST_TOOLS.some(tool => tool.name === toolName);
-      const isCommentTool = COMMENT_TOOLS.some(tool => tool.name === toolName);
-      
-      try {
-        // Call the appropriate handler
-        if (isTaskTool && this.taskToolHandler) {
-          return await this.taskToolHandler(request);
-        } else if (isDocTool && this.docToolHandler) {
-          return await this.docToolHandler(request);
-        } else if (isSpaceTool && this.spaceToolHandler) {
-          return await this.spaceToolHandler(request);
-        } else if (isChecklistTool && this.checklistToolHandler) {
-          return await this.checklistToolHandler(request);
-        } else if (isCommentTool && this.commentToolHandler) {
-          return await this.commentToolHandler(request);
-        } else {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Unknown tool: ${toolName}`,
-              },
-            ],
-            isError: true,
-          };
-        }
-      } catch (error: any) {
-        console.error(`Error handling tool call to ${toolName}:`, error);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: ${error.message}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    });
-
-    // Set up task-related tools and resources
-    this.taskToolHandler = setupTaskTools(this.server);
+  private setupResources() {
+    // Set up all resources
     setupTaskResources(this.server);
-    
-    // Set up space-related tools
-    this.spaceToolHandler = setupSpaceTools(this.server);
-    
-    // Set up doc-related tools and resources
-    this.docToolHandler = setupDocTools(this.server);
     setupDocResources(this.server);
-    
-    // Set up checklist-related tools and resources
-    this.checklistToolHandler = setupChecklistTools(this.server);
     setupChecklistResources(this.server);
-    
-    // Set up comment-related tools and resources
-    this.commentToolHandler = setupCommentTools(this.server);
     setupCommentResources(this.server);
-    
-    // Set up space, folder, and list resources
     setupSpaceResources(this.server);
     setupFolderResources(this.server);
     setupListResources(this.server);
