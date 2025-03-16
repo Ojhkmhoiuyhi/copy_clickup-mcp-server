@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { setupTaskTools, TASK_TOOLS } from './tools/task-tools.js';
 import { setupDocTools, DOC_TOOLS } from './tools/doc-tools.js';
 import { setupSpaceTools, SPACE_TOOLS } from './tools/space-tools.js';
@@ -10,7 +10,10 @@ import { setupCommentTools, COMMENT_TOOLS } from './tools/comment-tools.js';
 import { setupTaskResources } from './resources/task-resources.js';
 import { setupDocResources } from './resources/doc-resources.js';
 import { setupChecklistResources } from './resources/checklist-resources.js';
-import { setupCommentResources } from './resources/comment-resources.js';
+import { setupCommentResources, COMMENT_RESOURCES } from './resources/comment-resources.js';
+import { setupSpaceResources } from './resources/space-resources.js';
+import { setupFolderResources } from './resources/folder-resources.js';
+import { setupListResources, LIST_RESOURCES } from './resources/list-resources.js';
 
 // Environment variables are passed to the server through the MCP settings file
 // See mcp-settings-example.json for an example
@@ -27,11 +30,14 @@ class ClickUpServer {
     this.server = new Server(
       {
         name: 'clickup-server',
-        version: '1.3.0',
+        version: '1.4.0',
       },
       {
         capabilities: {
-          resources: {},
+          resources: {
+            list: true,
+            read: true,
+          },
           tools: {},
         },
       }
@@ -55,6 +61,17 @@ class ClickUpServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [...TASK_TOOLS, ...DOC_TOOLS, ...SPACE_TOOLS, ...CHECKLIST_TOOLS, ...COMMENT_TOOLS],
+      };
+    });
+
+    // Register a combined list of all resources
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      return {
+        resources: [
+          ...LIST_RESOURCES,
+          ...COMMENT_RESOURCES,
+          // Add other resource exports as they're implemented
+        ],
       };
     });
 
@@ -124,6 +141,11 @@ class ClickUpServer {
     // Set up comment-related tools and resources
     this.commentToolHandler = setupCommentTools(this.server);
     setupCommentResources(this.server);
+    
+    // Set up space, folder, and list resources
+    setupSpaceResources(this.server);
+    setupFolderResources(this.server);
+    setupListResources(this.server);
   }
 
   async run() {

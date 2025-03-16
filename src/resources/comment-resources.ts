@@ -1,10 +1,9 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
-  ListResourcesRequestSchema,
-  ListResourceTemplatesRequestSchema,
-  ReadResourceRequestSchema,
   ErrorCode,
+  ListResourceTemplatesRequestSchema,
   McpError,
+  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createClickUpClient } from '../clickup-client/index.js';
 import { createCommentsClient } from '../clickup-client/comments.js';
@@ -13,13 +12,41 @@ import { createCommentsClient } from '../clickup-client/comments.js';
 const clickUpClient = createClickUpClient();
 const commentsClient = createCommentsClient(clickUpClient);
 
+// URI patterns
+const TASK_COMMENTS_URI_PATTERN = /^clickup:\/\/task\/([^/]+)\/comments$/;
+const CHAT_VIEW_COMMENTS_URI_PATTERN = /^clickup:\/\/view\/([^/]+)\/comments$/;
+const LIST_COMMENTS_URI_PATTERN = /^clickup:\/\/list\/([^/]+)\/comments$/;
+const THREADED_COMMENTS_URI_PATTERN = /^clickup:\/\/comment\/([^/]+)\/reply$/;
+
+// Define comment resources
+export const COMMENT_RESOURCES = [
+  {
+    uri: 'clickup://task/868czp2t3/comments',
+    name: 'Comments for task 868czp2t3',
+    mimeType: 'application/json',
+    description: 'Comments for a specific task',
+  },
+  {
+    uri: 'clickup://list/901109776097/comments',
+    name: 'Comments for list 901109776097',
+    mimeType: 'application/json',
+    description: 'Comments for a specific list',
+  },
+  {
+    uri: 'clickup://comment/90110125009748/reply',
+    name: 'Threaded comments',
+    mimeType: 'application/json',
+    description: 'Threaded comments for a specific comment',
+  },
+  {
+    uri: 'clickup://view/123456/comments',
+    name: 'Chat view comments',
+    mimeType: 'application/json',
+    description: 'Comments for a specific chat view',
+  }
+];
+
 export function setupCommentResources(server: Server): void {
-  // Register the list of available resources
-  server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    return {
-      resources: [],
-    };
-  });
 
   // Register the list of available resource templates
   server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
@@ -28,84 +55,177 @@ export function setupCommentResources(server: Server): void {
         {
           uriTemplate: 'clickup://task/{task_id}/comments',
           name: 'Task comments',
+          mimeType: 'application/json',
           description: 'Comments for a specific task',
-          mimeType: 'application/json',
-        },
-        {
-          uriTemplate: 'clickup://comment/{comment_id}/reply',
-          name: 'Threaded comments',
-          description: 'Threaded comments for a specific comment',
-          mimeType: 'application/json',
-        },
-        {
-          uriTemplate: 'clickup://list/{list_id}/comments',
-          name: 'List comments',
-          description: 'Comments for a specific list',
-          mimeType: 'application/json',
         },
         {
           uriTemplate: 'clickup://view/{view_id}/comments',
           name: 'Chat view comments',
-          description: 'Comments for a specific chat view',
           mimeType: 'application/json',
+          description: 'Comments for a specific chat view',
+        },
+        {
+          uriTemplate: 'clickup://list/{list_id}/comments',
+          name: 'List comments',
+          mimeType: 'application/json',
+          description: 'Comments for a specific list',
+        },
+        {
+          uriTemplate: 'clickup://comment/{comment_id}/reply',
+          name: 'Threaded comments',
+          mimeType: 'application/json',
+          description: 'Threaded comments for a specific comment',
         },
       ],
     };
   });
 
-  // Register resource handler
+  // Handle resource reads
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    // Check if this is a comment resource
-    const taskCommentsMatch = request.params.uri.match(/^clickup:\/\/task\/([^/]+)\/comments$/);
-    const threadedCommentsMatch = request.params.uri.match(/^clickup:\/\/comment\/([^/]+)\/reply$/);
-    const listCommentsMatch = request.params.uri.match(/^clickup:\/\/list\/([^/]+)\/comments$/);
-    const viewCommentsMatch = request.params.uri.match(/^clickup:\/\/view\/([^/]+)\/comments$/);
-
-    // If not a comment resource, return empty to let other handlers process it
-    if (!taskCommentsMatch && !threadedCommentsMatch && !listCommentsMatch && !viewCommentsMatch) {
-      return {};
+    const uri = request.params.uri;
+    console.log(`[CommentResources] Handling resource read for URI: ${uri}`);
+    
+    // Check if this is a task comments resource
+    const taskCommentsMatch = uri.match(TASK_COMMENTS_URI_PATTERN);
+    if (taskCommentsMatch) {
+      const taskId = taskCommentsMatch[1];
+      console.log(`[CommentResources] Matched task comments pattern, taskId: ${taskId}`);
+      const result = await handleTaskCommentsResource(taskId);
+      console.log(`[CommentResources] Result from handleTaskCommentsResource:`, result);
+      return result;
     }
-
-    try {
-      let result;
-      let title;
-
-      if (taskCommentsMatch) {
-        const taskId = taskCommentsMatch[1];
-        result = await commentsClient.getTaskComments(taskId);
-        title = `Comments for task ${taskId}`;
-      } else if (threadedCommentsMatch) {
-        const commentId = threadedCommentsMatch[1];
-        result = await commentsClient.getThreadedComments(commentId);
-        title = `Threaded comments for comment ${commentId}`;
-      } else if (listCommentsMatch) {
-        const listId = listCommentsMatch[1];
-        result = await commentsClient.getListComments(listId);
-        title = `Comments for list ${listId}`;
-      } else if (viewCommentsMatch) {
-        const viewId = viewCommentsMatch[1];
-        result = await commentsClient.getChatViewComments(viewId);
-        title = `Comments for chat view ${viewId}`;
-      } else {
-        throw new McpError(ErrorCode.InvalidRequest, `Invalid comment resource URI: ${request.params.uri}`);
-      }
-
-      return {
-        contents: [
-          {
-            uri: request.params.uri,
-            title,
-            mimeType: 'application/json',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error: any) {
-      console.error(`Error reading comment resource ${request.params.uri}:`, error);
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Error reading comment resource: ${error.message}`
-      );
+    
+    // Check if this is a chat view comments resource
+    const chatViewCommentsMatch = uri.match(CHAT_VIEW_COMMENTS_URI_PATTERN);
+    if (chatViewCommentsMatch) {
+      const viewId = chatViewCommentsMatch[1];
+      console.log(`[CommentResources] Matched chat view comments pattern, viewId: ${viewId}`);
+      const result = await handleChatViewCommentsResource(viewId);
+      console.log(`[CommentResources] Result from handleChatViewCommentsResource:`, result);
+      return result;
     }
+    
+    // Check if this is a list comments resource
+    const listCommentsMatch = uri.match(LIST_COMMENTS_URI_PATTERN);
+    if (listCommentsMatch) {
+      const listId = listCommentsMatch[1];
+      console.log(`[CommentResources] Matched list comments pattern, listId: ${listId}`);
+      const result = await handleListCommentsResource(listId);
+      console.log(`[CommentResources] Result from handleListCommentsResource:`, result);
+      return result;
+    }
+    
+    // Check if this is a threaded comments resource
+    const threadedCommentsMatch = uri.match(THREADED_COMMENTS_URI_PATTERN);
+    if (threadedCommentsMatch) {
+      const commentId = threadedCommentsMatch[1];
+      console.log(`[CommentResources] Matched threaded comments pattern, commentId: ${commentId}`);
+      const result = await handleThreadedCommentsResource(commentId);
+      console.log(`[CommentResources] Result from handleThreadedCommentsResource:`, result);
+      return result;
+    }
+    
+    // If no match, return an empty object to let other handlers process it
+    console.log(`[CommentResources] No match for URI: ${uri}`);
+    return {};
   });
+}
+
+async function handleTaskCommentsResource(taskId: string) {
+  try {
+    console.log(`[CommentResources] Fetching comments for task: ${taskId}`);
+    const comments = await commentsClient.getTaskComments(taskId);
+    console.log(`[CommentResources] Got comments:`, comments);
+    
+    // Format the response exactly like the list resources implementation
+    const result = {
+      contents: [
+        {
+          uri: `clickup://task/${taskId}/comments`,
+          mimeType: 'application/json',
+          text: JSON.stringify(comments, null, 2),
+        },
+      ],
+    };
+    console.log(`[CommentResources] Returning result:`, result);
+    return result;
+  } catch (error: any) {
+    console.error(`[CommentResources] Error fetching task comments:`, error);
+    throw new McpError(
+      ErrorCode.InternalError,
+      `Error fetching task comments: ${error.message}`
+    );
+  }
+}
+
+async function handleChatViewCommentsResource(viewId: string) {
+  try {
+    console.log(`[CommentResources] Fetching comments for chat view: ${viewId}`);
+    const comments = await commentsClient.getChatViewComments(viewId);
+    console.log(`[CommentResources] Got comments:`, comments);
+    
+    return {
+      contents: [
+        {
+          uri: `clickup://view/${viewId}/comments`,
+          mimeType: 'application/json',
+          text: JSON.stringify(comments, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error(`[CommentResources] Error fetching chat view comments:`, error);
+    throw new McpError(
+      ErrorCode.InternalError,
+      `Error fetching chat view comments: ${error.message}`
+    );
+  }
+}
+
+async function handleListCommentsResource(listId: string) {
+  try {
+    console.log(`[CommentResources] Fetching comments for list: ${listId}`);
+    const comments = await commentsClient.getListComments(listId);
+    console.log(`[CommentResources] Got comments:`, comments);
+    
+    return {
+      contents: [
+        {
+          uri: `clickup://list/${listId}/comments`,
+          mimeType: 'application/json',
+          text: JSON.stringify(comments, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error(`[CommentResources] Error fetching list comments:`, error);
+    throw new McpError(
+      ErrorCode.InternalError,
+      `Error fetching list comments: ${error.message}`
+    );
+  }
+}
+
+async function handleThreadedCommentsResource(commentId: string) {
+  try {
+    console.log(`[CommentResources] Fetching threaded comments for comment: ${commentId}`);
+    const comments = await commentsClient.getThreadedComments(commentId);
+    console.log(`[CommentResources] Got comments:`, comments);
+    
+    return {
+      contents: [
+        {
+          uri: `clickup://comment/${commentId}/reply`,
+          mimeType: 'application/json',
+          text: JSON.stringify(comments, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error(`[CommentResources] Error fetching threaded comments:`, error);
+    throw new McpError(
+      ErrorCode.InternalError,
+      `Error fetching threaded comments: ${error.message}`
+    );
+  }
 }

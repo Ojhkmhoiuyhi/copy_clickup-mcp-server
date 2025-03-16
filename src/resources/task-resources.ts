@@ -41,22 +41,29 @@ export function setupTaskResources(server: Server): void {
   // Handle resource reads
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const uri = request.params.uri;
+    console.log(`[TaskResources] Handling resource read for URI: ${uri}`);
     
     // Check if this is a task resource
     const taskMatch = uri.match(TASK_URI_PATTERN);
     if (taskMatch) {
       const taskId = taskMatch[1];
-      return await handleTaskResource(taskId);
+      console.log(`[TaskResources] Matched task pattern, taskId: ${taskId}`);
+      const result = await handleTaskResource(taskId);
+      console.log(`[TaskResources] Result from handleTaskResource:`, result);
+      return result;
     }
     
     // If no match, return an empty object to let other handlers process it
+    console.log(`[TaskResources] No match for URI: ${uri}`);
     return {};
   });
 }
 
 async function handleTaskResource(taskId: string) {
   try {
+    console.log(`[TaskResources] Fetching task: ${taskId}`);
     const task = await tasksClient.getTask(taskId);
+    console.log(`[TaskResources] Got task:`, task);
     
     return {
       contents: [
@@ -68,6 +75,7 @@ async function handleTaskResource(taskId: string) {
       ],
     };
   } catch (error: any) {
+    console.error(`[TaskResources] Error fetching task:`, error);
     throw new McpError(
       ErrorCode.InternalError,
       `Error fetching task: ${error.message}`
