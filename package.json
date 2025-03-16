@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/clickup-server.git"
+    "url": "git+https://github.com/nsxdavid/clickup-server.git"
   },
   "keywords": [
     "clickup",
@@ -27,12 +27,15 @@
     "api",
     "server"
   ],
-  "author": "ClickUp MCP Server Contributors",
+  "author": "David Whatley (https://davidwhatley.com)",
+  "contributors": [
+    "ClickUp MCP Server Contributors"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/your-username/clickup-server/issues"
+    "url": "https://github.com/nsxdavid/clickup-server/issues"
   },
-  "homepage": "https://github.com/your-username/clickup-server#readme",
+  "homepage": "https://github.com/nsxdavid/clickup-server#readme",
   "engines": {
     "node": ">=16.0.0"
   },

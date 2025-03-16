@@ -18,6 +18,7 @@ A Model Context Protocol (MCP) server that provides a standardized interface for
 - [Available Resources](#available-resources)
 - [Implementation Details](#implementation-details)
 - [Contributing](#contributing)
+- [Author](#author)
 - [License](#license)
 
 ## Overview
@@ -50,7 +51,7 @@ This enables AI assistants to seamlessly interact with ClickUp data and function
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/clickup-server.git
+   git clone https://github.com/nsxdavid/clickup-server.git
    cd clickup-server
    ```
 
@@ -105,7 +106,7 @@ To use this server with an MCP client (like Claude), you need to configure it in
   "mcpServers": {
     "clickup": {
       "command": "node",
-      "args": ["/path/to/clickup-server/build/index.js"],
+      "args": ["path/to/clickup-server/build/index.js"],
       "env": {
         "CLICKUP_API_TOKEN": "your_api_token_here"
       },
@@ -398,6 +399,10 @@ return {
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to contribute to this project.
+
+## Author
+
+This project was created by [David Whatley](https://davidwhatley.com) as the original author.
 
 ## License
 
