@@ -131,7 +131,32 @@ To use this server with an MCP client (like Claude), you need to configure it in
 
 3. Add the following configuration, replacing placeholders with your actual values:
 
-#### If installed globally via npm:
+#### Option 1: One-Click Installation (No Installation Required)
+
+Run directly from npm without installing:
+
+```json
+{
+  "mcpServers": {
+    "clickup": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "clickup-mcp-server"
+      ],
+      "env": {
+        "CLICKUP_API_TOKEN": "your_api_token_here"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+#### Option 2: If Installed Globally via npm
+
+If you've installed the package globally with `npm install -g clickup-mcp-server`:
 
 ```json
 {
@@ -148,7 +173,9 @@ To use this server with an MCP client (like Claude), you need to configure it in
 }
 ```
 
-#### If installed from source:
+#### Option 3: If Installed from Source
+
+If you've cloned the repository and built from source:
 
 ```json
 {

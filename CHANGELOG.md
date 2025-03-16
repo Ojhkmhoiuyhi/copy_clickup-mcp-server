@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added one-click installation option using npx
+- Created llms-install.md file for AI assistants
 
 ### Changed
 
