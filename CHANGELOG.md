@@ -8,12 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added one-click installation option using npx
-- Created llms-install.md file for AI assistants
 
 ### Changed
 
 ### Fixed
+
+## [1.9.0] - 2025-03-16
+
+### Added
+- Added one-click installation option using npx
+- Created llms-install.md file for AI assistants
 
 ## [1.8.0] - 2025-03-16
 
