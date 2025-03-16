@@ -2,9 +2,61 @@
 
 This guide provides streamlined instructions for AI assistants to install and configure the ClickUp MCP Server.
 
+## Prerequisites
+
+Before installing the ClickUp MCP Server, ensure the following prerequisites are installed:
+
+### Node.js and npm
+
+The ClickUp MCP Server requires Node.js (which includes npm) version 18.0.0 or higher:
+
+1. **Check if Node.js is already installed**:
+   ```bash
+   node --version
+   npm --version
+   ```
+   If these commands return version numbers, and the Node.js version is 18.0.0 or higher, you can skip to the next section.
+
+2. **Install Node.js and npm if needed**:
+   - **Windows**: 
+     - Using winget (Windows Package Manager):
+       ```bash
+       # Check if winget is available
+       winget --version
+       
+       # If available, install Node.js LTS
+       winget install OpenJS.NodeJS.LTS
+       ```
+       Note: winget is pre-installed on Windows 11 and newer Windows 10 versions. If the command is not found, use the installer method below.
+     - Or download and run the installer from [nodejs.org](https://nodejs.org/)
+   - **macOS**: 
+     - Using Homebrew: `brew install node`
+     - Or download from [nodejs.org](https://nodejs.org/)
+   - **Linux**:
+     - Ubuntu/Debian: `sudo apt update && sudo apt install nodejs npm`
+     - Other distributions: See [nodejs.org](https://nodejs.org/)
+
+3. **Verify installation**:
+   ```bash
+   node --version
+   npm --version
+   ```
+
 ## One-Click Installation
 
-The ClickUp MCP Server can be installed and run directly from npm without requiring any manual installation steps:
+Once Node.js and npm are installed, the ClickUp MCP Server can be installed and run directly from npm without requiring any additional manual installation steps.
+
+### About npx
+
+The configuration below uses `npx`, which is a package runner tool that comes with npm (Node Package Manager). It allows you to:
+
+- Run packages without installing them globally
+- Execute commands from locally installed packages
+- Run packages directly from the npm registry
+
+When you use the configuration below, npx will automatically download and run the latest version of the clickup-mcp-server package from the npm registry each time it's needed, ensuring you always have the most up-to-date version.
+
+### Configuration
 
 1. Add the following configuration to the MCP settings file:
 
