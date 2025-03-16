@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [1.6.0] - 2025-03-16
+
+### Added
 - GitVersion.yml for automated semantic versioning
 - CODE_OF_CONDUCT.md based on Contributor Covenant
 - CONTRIBUTING.md with guidelines for contributors
