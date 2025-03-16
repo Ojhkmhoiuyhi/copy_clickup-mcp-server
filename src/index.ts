@@ -6,9 +6,11 @@ import { setupTaskTools, TASK_TOOLS } from './tools/task-tools.js';
 import { setupDocTools, DOC_TOOLS } from './tools/doc-tools.js';
 import { setupSpaceTools, SPACE_TOOLS } from './tools/space-tools.js';
 import { setupChecklistTools, CHECKLIST_TOOLS } from './tools/checklist-tools.js';
+import { setupCommentTools, COMMENT_TOOLS } from './tools/comment-tools.js';
 import { setupTaskResources } from './resources/task-resources.js';
 import { setupDocResources } from './resources/doc-resources.js';
 import { setupChecklistResources } from './resources/checklist-resources.js';
+import { setupCommentResources } from './resources/comment-resources.js';
 
 // Environment variables are passed to the server through the MCP settings file
 // See mcp-settings-example.json for an example
@@ -19,12 +21,13 @@ class ClickUpServer {
   private docToolHandler: any;
   private spaceToolHandler: any;
   private checklistToolHandler: any;
+  private commentToolHandler: any;
 
   constructor() {
     this.server = new Server(
       {
         name: 'clickup-server',
-        version: '1.1.0',
+        version: '1.3.0',
       },
       {
         capabilities: {
@@ -51,7 +54,7 @@ class ClickUpServer {
     // Register a combined list of all tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
-        tools: [...TASK_TOOLS, ...DOC_TOOLS, ...SPACE_TOOLS, ...CHECKLIST_TOOLS],
+        tools: [...TASK_TOOLS, ...DOC_TOOLS, ...SPACE_TOOLS, ...CHECKLIST_TOOLS, ...COMMENT_TOOLS],
       };
     });
 
@@ -64,6 +67,7 @@ class ClickUpServer {
       const isDocTool = DOC_TOOLS.some(tool => tool.name === toolName);
       const isSpaceTool = SPACE_TOOLS.some(tool => tool.name === toolName);
       const isChecklistTool = CHECKLIST_TOOLS.some(tool => tool.name === toolName);
+      const isCommentTool = COMMENT_TOOLS.some(tool => tool.name === toolName);
       
       try {
         // Call the appropriate handler
@@ -75,6 +79,8 @@ class ClickUpServer {
           return await this.spaceToolHandler(request);
         } else if (isChecklistTool && this.checklistToolHandler) {
           return await this.checklistToolHandler(request);
+        } else if (isCommentTool && this.commentToolHandler) {
+          return await this.commentToolHandler(request);
         } else {
           return {
             content: [
@@ -114,6 +120,10 @@ class ClickUpServer {
     // Set up checklist-related tools and resources
     this.checklistToolHandler = setupChecklistTools(this.server);
     setupChecklistResources(this.server);
+    
+    // Set up comment-related tools and resources
+    this.commentToolHandler = setupCommentTools(this.server);
+    setupCommentResources(this.server);
   }
 
   async run() {
