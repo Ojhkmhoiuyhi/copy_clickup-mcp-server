@@ -16,11 +16,15 @@ Use this section to tell people about which versions of your project are current
 We take the security of the ClickUp MCP Server seriously. If you believe you've found a security vulnerability, please follow these steps:
 
 1. **Do not disclose the vulnerability publicly**
-2. **Email the details to [INSERT SECURITY EMAIL]**
+2. **Use GitHub's private vulnerability reporting feature**
+   - Go to the repository's Security tab
+   - Click on "Report a vulnerability"
    - Provide a detailed description of the vulnerability
    - Include steps to reproduce the issue
    - Attach any proof-of-concept code if applicable
    - Let us know how you'd like to be credited for the discovery (if desired)
+
+3. **Alternatively, you can email the details to security@davidwhatley.com**
 
 ## What to Expect
 

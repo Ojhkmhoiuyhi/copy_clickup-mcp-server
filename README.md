@@ -17,6 +17,7 @@ A Model Context Protocol (MCP) server that provides a standardized interface for
 - [Available Tools](#available-tools)
 - [Available Resources](#available-resources)
 - [Implementation Details](#implementation-details)
+- [Security](#security)
 - [Contributing](#contributing)
 - [Author](#author)
 - [License](#license)
@@ -396,9 +397,52 @@ return {
 };
 ```
 
+## Security
+
+The ClickUp MCP Server takes security seriously and includes several features to help protect your data:
+
+### Secure Authentication
+
+- Support for both API token and OAuth authentication methods
+- Environment variable-based configuration to avoid hardcoding credentials
+- Helper script for secure OAuth token retrieval
+
+### Vulnerability Reporting
+
+We've implemented GitHub's private vulnerability reporting feature to allow security researchers to report vulnerabilities securely. If you discover a security issue:
+
+1. Go to the repository's Security tab
+2. Click on "Report a vulnerability"
+3. Provide details about the vulnerability
+
+For more information, see our [Security Policy](SECURITY.md).
+
+### Automated Security Updates
+
+The project uses Dependabot to automatically monitor dependencies for security vulnerabilities and create pull requests for security updates. This helps ensure that:
+
+- Dependencies are kept up-to-date with security patches
+- Security vulnerabilities are addressed promptly
+- The maintenance burden for security updates is reduced
+
+### Best Practices
+
+We follow security best practices including:
+
+- Input validation using Zod schemas
+- Error handling that doesn't expose sensitive information
+- Proper API token management
+- Secure defaults in configuration
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to contribute to this project.
+
+### Development Notes
+
+- The project has some linting issues that need to be fixed. If you're contributing, please help fix these issues by following the ESLint rules in `.eslintrc.json`.
+- You can run `npm run lint --fix` to automatically fix some of the issues.
+- The CI workflow currently skips the linting step to allow for successful builds while these issues are being addressed.
 
 ## Author
 

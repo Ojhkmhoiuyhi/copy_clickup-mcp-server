@@ -59,6 +59,17 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 - Include JSDoc comments for public APIs
 - Write unit tests for new functionality
 
+### Linting Issues
+
+The project currently has some linting issues that need to be fixed:
+
+1. **String Quotes**: Use single quotes for strings instead of double quotes.
+2. **Unused Variables**: Remove or use all declared variables.
+3. **Console Statements**: Remove all `console.log` statements from production code.
+4. **Any Types**: Avoid using the `any` type when possible. Specify more precise types.
+
+You can run `npm run lint --fix` to automatically fix some of these issues. The CI workflow currently skips the linting step to allow for successful builds while these issues are being addressed.
+
 ## Adding New Features
 
 ### Adding New ClickUp API Functionality

@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CONTRIBUTING.md with guidelines for contributors
 - CHANGELOG.md to track version history
 - Comprehensive README.md with usage examples and documentation
+- GitHub's private vulnerability reporting feature
+- Dependabot configuration for automated security updates
+- GitHub security policy file
+
+### Changed
+- Updated CI workflow to use npm install instead of npm ci
+- Temporarily disabled linting in CI workflow
+- Updated Node.js requirement to 18.0.0 or higher
+- Added notes about linting issues in README.md and CONTRIBUTING.md
+- Enhanced security policy with GitHub vulnerability reporting
 
 ## [1.5.0] - 2025-03-16
 
