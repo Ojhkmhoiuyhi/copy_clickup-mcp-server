@@ -1,57 +1,191 @@
-# ClickUp MCP Server
+# MCP Server Development Protocol - ClickUp Server
 
-## Project Overview
+⚠️ CRITICAL: DO NOT USE attempt_completion BEFORE TESTING ⚠️
 
-The ClickUp MCP Server is a Model Context Protocol (MCP) server that provides a standardized interface for AI assistants to interact with the ClickUp API. This server enables AI systems to access and manipulate ClickUp data such as workspaces, spaces, folders, lists, tasks, docs, comments, and checklists through a consistent protocol.
+## Step 1: Planning (PLAN MODE)
+- **What problem does this tool solve?**
+  - Provides a standardized interface for AI assistants to interact with the ClickUp API
+  - Enables AI systems to access and manipulate ClickUp data (workspaces, spaces, folders, lists, tasks, docs, comments, checklists)
+  - Bridges the gap between AI assistants and the ClickUp platform without needing to understand the specifics of the ClickUp API
 
-## Core Functionality
+- **What API/service will it use?**
+  - ClickUp API (https://clickup.com/api/)
 
-This server acts as a bridge between AI assistants and the ClickUp platform by:
+- **What are the authentication requirements?**
+  - ✓ Standard API key (ClickUp API Token)
+  - ✓ OAuth (optional, supported through separate setup script)
 
-1. Exposing ClickUp data as MCP resources with standardized URIs
-2. Providing MCP tools for performing operations on ClickUp entities
-3. Handling authentication and API communication with ClickUp
-4. Formatting responses according to the MCP specification
+## Step 2: Implementation (ACT MODE)
+1. **Bootstrap**
+   - Using the MCP SDK for TypeScript:
+     ```bash
+     npx @modelcontextprotocol/create-server clickup-mcp-server
+     cd clickup-mcp-server
+     npm install axios dotenv express zod @modelcontextprotocol/sdk
+     ```
 
-## Architecture
+2. **Core Implementation**
+   - Implemented using MCP SDK with modular architecture:
+     ```
+     clickup-mcp-server/
+     ├── src/
+     │   ├── index.ts                 # Main server entry point
+     │   ├── app.ts                   # Express app setup (for HTTP transport)
+     │   ├── clickup-client/          # API clients for ClickUp
+     │   │   ├── auth.ts              # Authentication handling
+     │   │   ├── tasks.ts             # Task-related API calls
+     │   │   ├── lists.ts             # List-related API calls
+     │   │   ├── spaces.ts            # Space-related API calls
+     │   │   ├── folders.ts           # Folder-related API calls
+     │   │   ├── docs.ts              # Doc-related API calls
+     │   │   ├── comments.ts          # Comment-related API calls
+     │   │   ├── checklists.ts        # Checklist-related API calls
+     │   │   └── index.ts             # Client exports
+     │   ├── tools/                   # MCP tool implementations
+     │   ├── resources/               # MCP resource implementations
+     │   ├── controllers/             # Business logic controllers
+     │   ├── routes/                  # Express routes (for HTTP)
+     │   └── services/                # Service layer
+     └── scripts/
+         └── get-access-token.js      # Helper for OAuth token retrieval
+     ```
+   - Comprehensive logging:
+     ```typescript
+     console.error('[ClickUp API] Requesting workspace data');
+     console.error('[ClickUp API] Request to endpoint:', endpoint);
+     console.error('[Error] API call failed with:', error);
+     ```
+   - Strong type definitions with TypeScript and Zod schemas for all inputs and outputs
+   - Error handling with context in all API clients
+   - Rate limiting through ClickUp API constraints
 
-The project follows a modular architecture organized by ClickUp entity types:
+3. **Configuration**
+   - API Token authentication:
+     ```json
+     {
+       "mcpServers": {
+         "clickup": {
+           "command": "clickup-mcp-server",
+           "env": {
+             "CLICKUP_API_TOKEN": "your_api_token_here"
+           },
+           "disabled": false,
+           "autoApprove": []
+         }
+       }
+     }
+     ```
+   - Or if installed from source:
+     ```json
+     {
+       "mcpServers": {
+         "clickup": {
+           "command": "node",
+           "args": ["path/to/clickup-mcp-server/build/index.js"],
+           "env": {
+             "CLICKUP_API_TOKEN": "your_api_token_here"
+           },
+           "disabled": false,
+           "autoApprove": []
+         }
+       }
+     }
+     ```
 
-```
-clickup-server/
-├── src/
-│   ├── index.ts                 # Main server entry point
-│   ├── app.ts                   # Express app setup (for HTTP transport)
-│   ├── clickup-client/          # API clients for ClickUp
-│   │   ├── auth.ts              # Authentication handling
-│   │   ├── tasks.ts             # Task-related API calls
-│   │   ├── lists.ts             # List-related API calls
-│   │   ├── spaces.ts            # Space-related API calls
-│   │   ├── folders.ts           # Folder-related API calls
-│   │   ├── docs.ts              # Doc-related API calls
-│   │   ├── comments.ts          # Comment-related API calls
-│   │   ├── checklists.ts        # Checklist-related API calls
-│   │   └── index.ts             # Client exports
-│   ├── tools/                   # MCP tool implementations
-│   │   ├── task-tools.ts        # Task operations
-│   │   ├── doc-tools.ts         # Doc operations
-│   │   ├── space-tools.ts       # Space operations
-│   │   ├── checklist-tools.ts   # Checklist operations
-│   │   └── comment-tools.ts     # Comment operations
-│   ├── resources/               # MCP resource implementations
-│   │   ├── task-resources.ts    # Task data access
-│   │   ├── list-resources.ts    # List data access
-│   │   ├── space-resources.ts   # Space data access
-│   │   ├── folder-resources.ts  # Folder data access
-│   │   ├── doc-resources.ts     # Doc data access
-│   │   ├── checklist-resources.ts # Checklist data access
-│   │   └── comment-resources.ts # Comment data access
-│   ├── controllers/             # Business logic controllers
-│   ├── routes/                  # Express routes (for HTTP)
-│   └── services/                # Service layer
-└── scripts/
-    └── get-access-token.js      # Helper for OAuth token retrieval
-```
+## Step 3: Testing (BLOCKER ⛔️)
+
+<thinking>
+BEFORE using attempt_completion, I MUST verify:
+- Have I tested EVERY tool?
+- Have I confirmed success from the user for each test?
+- Have I documented the test results?
+
+If ANY answer is "no", I MUST NOT use attempt_completion.
+</thinking>
+
+1. **Test Each Tool (REQUIRED)**
+   - Testing workspace and space tools:
+     ```javascript
+     // Test get_workspaces
+     use_mcp_tool({
+       server_name: "clickup",
+       tool_name: "get_workspaces",
+       arguments: {}
+     })
+     
+     // Test get_spaces
+     use_mcp_tool({
+       server_name: "clickup",
+       tool_name: "get_spaces",
+       arguments: { 
+         workspace_id: "9011839976" 
+       }
+     })
+     ```
+   
+   - Testing task tools:
+     ```javascript
+     // Test get_tasks
+     use_mcp_tool({
+       server_name: "clickup",
+       tool_name: "get_tasks",
+       arguments: {
+         list_id: "901109776097",
+         include_closed: false
+       }
+     })
+     
+     // Test create_task
+     use_mcp_tool({
+       server_name: "clickup",
+       tool_name: "create_task",
+       arguments: {
+         list_id: "901109776097",
+         name: "Test task from MCP",
+         description: "This is a test task"
+       }
+     })
+     ```
+   
+   - Testing document tools:
+     ```javascript
+     // Test get_docs_from_workspace
+     use_mcp_tool({
+       server_name: "clickup",
+       tool_name: "get_docs_from_workspace",
+       arguments: { 
+         workspace_id: "9011839976",
+         deleted: false,
+         archived: false
+       }
+     })
+     ```
+   
+   - Testing resource access:
+     ```javascript
+     // Test task resource
+     access_mcp_resource({
+       server_name: "clickup",
+       uri: "clickup://task/86rkjvttt"
+     })
+     
+     // Test lists in folder resource
+     access_mcp_resource({
+       server_name: "clickup",
+       uri: "clickup://folder/90115795569/lists"
+     })
+     ```
+   
+   ⚠️ DO NOT PROCEED UNTIL ALL TOOLS TESTED
+
+## Step 4: Completion
+❗ STOP AND VERIFY:
+- ✓ Every tool has been tested with valid inputs
+- ✓ Output format is correct for each tool
+- ✓ Error handling has been verified
+- ✓ All resources are accessible
+
+Only after ALL tools have been tested can attempt_completion be used.
 
 ## Available Tools and Resources
 
@@ -59,22 +193,29 @@ clickup-server/
 
 The server provides tools for interacting with various ClickUp entities:
 
-#### Workspace and Space Tools
-- `get_workspaces`: Retrieve workspaces the user has access to
+#### Workspace and Authentication Tools
+- `get_workspaces`: Get the list of workspaces the user has access to
+- `get_workspace_seats`: Get information about seats in a workspace
+
+#### Space Tools
 - `get_spaces`: Get spaces within a workspace
 - `get_space`: Get details of a specific space
 
-#### List and Folder Tools
-- `get_lists`: Get lists in a folder or space
-- `get_folderless_lists`: Get lists not in any folder
-- `get_list`: Get details of a specific list
+#### Folder Tools
 - `create_folder`: Create a new folder in a space
 - `update_folder`: Update an existing folder
 - `delete_folder`: Delete a folder
+
+#### List Tools
+- `get_lists`: Get lists in a folder or space
+- `get_folderless_lists`: Get lists not in any folder
+- `get_list`: Get details of a specific list
 - `create_list`: Create a new list in a folder or space
 - `create_folderless_list`: Create a list not in any folder
 - `update_list`: Update an existing list
 - `delete_list`: Delete a list
+- `create_list_from_template_in_folder`: Create a list from a template in a folder
+- `create_list_from_template_in_space`: Create a list from a template in a space
 
 #### Task Tools
 - `get_tasks`: Get tasks from a list
@@ -84,7 +225,7 @@ The server provides tools for interacting with various ClickUp entities:
 - `add_task_to_list`: Add a task to a list
 - `remove_task_from_list`: Remove a task from a list
 
-#### Doc Tools
+#### Document Tools
 - `get_docs_from_workspace`: Get all docs from a workspace
 - `get_doc_content`: Get the content of a specific doc
 - `get_doc_pages`: Get the pages of a doc
@@ -114,137 +255,26 @@ The server provides tools for interacting with various ClickUp entities:
 
 The server exposes ClickUp data through URI-addressable resources:
 
-- `clickup://folder/{folder_id}/lists`: Lists in a specific folder
-- `clickup://space/{space_id}/lists`: Folderless lists in a specific space
-- `clickup://list/{list_id}`: Details of a specific list
+- `clickup://task/{task_id}`: Details of a specific task
 - `clickup://task/{task_id}/comments`: Comments for a specific task
-- `clickup://view/{view_id}/comments`: Comments for a specific chat view
+- `clickup://task/{task_id}/checklist`: Checklists for a specific task
+- `clickup://list/{list_id}`: Details of a specific list
 - `clickup://list/{list_id}/comments`: Comments for a specific list
+- `clickup://folder/{folder_id}`: Details of a specific folder
+- `clickup://folder/{folder_id}/lists`: Lists in a specific folder
+- `clickup://space/{space_id}`: Details of a specific space
+- `clickup://space/{space_id}/folders`: Folders in a specific space
+- `clickup://space/{space_id}/lists`: Folderless lists in a specific space
+- `clickup://workspace/{workspace_id}/spaces`: Spaces in a specific workspace
+- `clickup://workspace/{workspace_id}/doc/{doc_id}`: Content of a specific doc
+- `clickup://view/{view_id}/comments`: Comments for a specific chat view
 - `clickup://comment/{comment_id}/reply`: Threaded comments for a specific comment
+- `clickup://checklist/{checklist_id}/items`: Items in a specific checklist
 
-## Configuration
-
-The server requires a ClickUp API token for authentication, which is provided through environment variables in the MCP settings file:
-
-```json
-{
-  "mcpServers": {
-    "clickup": {
-      "command": "node",
-      "args": ["/path/to/clickup-server/build/index.js"],
-      "env": {
-        "CLICKUP_API_TOKEN": "your_api_token_here"
-      },
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
-}
-```
-
-## Implementation Details
-
-### MCP Server Setup
-
-The server is built using the MCP SDK and follows the standard MCP server pattern:
-
-1. Create a Server instance with capabilities
-2. Register request handlers for tools and resources
-3. Set up error handling
-4. Connect to a transport (stdio by default)
-
-### Tool Implementation Pattern
-
-Tools follow a consistent implementation pattern:
-
-1. Define tool metadata (name, description, input schema)
-2. Implement handler function that:
-   - Validates input parameters
-   - Calls the appropriate ClickUp API client
-   - Formats the response according to MCP specifications
-   - Handles errors properly
-
-### Resource Implementation Pattern
-
-Resources are implemented using:
-
-1. Static resource definitions for direct access
-2. Resource templates for parameterized access
-3. Handler functions that retrieve and format data
-
-## Usage Examples
-
-### Working with Tasks
-
-```javascript
-// Get tasks from a list
-use_mcp_tool({
-  server_name: "clickup",
-  tool_name: "get_tasks",
-  arguments: {
-    list_id: "123456789",
-    include_closed: false
-  }
-})
-
-// Create a new task
-use_mcp_tool({
-  server_name: "clickup",
-  tool_name: "create_task",
-  arguments: {
-    list_id: "123456789",
-    name: "New task",
-    description: "Task description",
-    priority: 3,
-    due_date: 1714521600000
-  }
-})
-```
-
-### Working with Documents
-
-```javascript
-// Get all docs in a workspace
-use_mcp_tool({
-  server_name: "clickup",
-  tool_name: "get_docs_from_workspace",
-  arguments: {
-    workspace_id: "9011839976",
-    deleted: false,
-    archived: false
-  }
-})
-
-// Get content of a specific doc
-use_mcp_tool({
-  server_name: "clickup",
-  tool_name: "get_doc_content",
-  arguments: {
-    doc_id: "8cjbgz8-911",
-    workspace_id: "9011839976"
-  }
-})
-```
-
-### Accessing Resources
-
-```javascript
-// Get comments for a task
-access_mcp_resource({
-  server_name: "clickup",
-  uri: "clickup://task/868czp2t3/comments"
-})
-
-// Get lists in a folder
-access_mcp_resource({
-  server_name: "clickup",
-  uri: "clickup://folder/90115795569/lists"
-})
-```
-
-## Development Notes
-
-- The server uses axios for HTTP requests to the ClickUp API
-- Error handling follows the MCP specification for consistent error reporting
-- The server is designed to be run as a standalone process, typically launched by an MCP client
-- Authentication is handled via API token, not OAuth (for simplicity)
+## Key Requirements
+- ✓ Uses MCP SDK (@modelcontextprotocol/sdk v1.6.1)
+- ✓ Comprehensive logging throughout all API clients
+- ✓ Strong typing with TypeScript and Zod schemas
+- ✓ Error handling in all API interactions
+- ✓ No testing skipped before completion
+- ✓ Available as npm package: `clickup-mcp-server`
