@@ -256,18 +256,11 @@ export const TASK_TOOLS = [
   },
 ];
 
-export function setupTaskTools(server: Server): void {
-  // Handle tool calls only - ListToolsRequestSchema is handled in index.ts
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+export function setupTaskTools(server: Server): (request: any) => Promise<any> {
+  // Return the handler function instead of registering it directly
+  const taskToolHandler = async (request: any) => {
     const toolName = request.params.name;
     const args = request.params.arguments;
-
-    // Check if this is one of our task tools
-    const isTaskTool = TASK_TOOLS.some(tool => tool.name === toolName);
-    if (!isTaskTool) {
-      // Not one of our tools, let other handlers process it
-      return {};
-    }
 
     try {
       switch (toolName) {
@@ -299,6 +292,7 @@ export function setupTaskTools(server: Server): void {
           };
       }
     } catch (error: any) {
+      console.error(`Error in task tool ${toolName}:`, error);
       return {
         content: [
           {
@@ -309,7 +303,9 @@ export function setupTaskTools(server: Server): void {
         isError: true,
       };
     }
-  });
+  };
+
+  return taskToolHandler;
 }
 
 // Handler implementations

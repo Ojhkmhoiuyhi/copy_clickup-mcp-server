@@ -119,18 +119,11 @@ export const DOC_TOOLS = [
   },
 ];
 
-export function setupDocTools(server: Server): void {
-  // Handle tool calls only - ListToolsRequestSchema is handled in index.ts
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+export function setupDocTools(server: Server): (request: any) => Promise<any> {
+  // Return the handler function instead of registering it directly
+  const docToolHandler = async (request: any) => {
     const toolName = request.params.name;
     const args = request.params.arguments;
-
-    // Check if this is one of our doc tools
-    const isDocTool = DOC_TOOLS.some(tool => tool.name === toolName);
-    if (!isDocTool) {
-      // Not one of our tools, let other handlers process it
-      return {};
-    }
 
     try {
       switch (toolName) {
@@ -156,6 +149,7 @@ export function setupDocTools(server: Server): void {
           };
       }
     } catch (error: any) {
+      console.error(`Error in doc tool ${toolName}:`, error);
       return {
         content: [
           {
@@ -166,7 +160,9 @@ export function setupDocTools(server: Server): void {
         isError: true,
       };
     }
-  });
+  };
+
+  return docToolHandler;
 }
 
 // Handler implementations

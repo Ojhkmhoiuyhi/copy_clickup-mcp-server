@@ -1,8 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
-  CallToolRequestSchema,
   ErrorCode,
-  ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createClickUpClient } from '../clickup-client/index.js';
@@ -44,18 +42,11 @@ export const SPACE_TOOLS = [
   },
 ];
 
-export function setupSpaceTools(server: Server): void {
-  // Handle tool calls only - ListToolsRequestSchema is handled in index.ts
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+export function setupSpaceTools(server: Server): (request: any) => Promise<any> {
+  // Return the handler function instead of registering it directly
+  const spaceToolHandler = async (request: any) => {
     const toolName = request.params.name;
     const args = request.params.arguments;
-
-    // Check if this is one of our space tools
-    const isSpaceTool = SPACE_TOOLS.some(tool => tool.name === toolName);
-    if (!isSpaceTool) {
-      // Not one of our tools, let other handlers process it
-      return {};
-    }
 
     try {
       switch (toolName) {
@@ -75,6 +66,7 @@ export function setupSpaceTools(server: Server): void {
           };
       }
     } catch (error: any) {
+      console.error(`Error in space tool ${toolName}:`, error);
       return {
         content: [
           {
@@ -85,7 +77,9 @@ export function setupSpaceTools(server: Server): void {
         isError: true,
       };
     }
-  });
+  };
+
+  return spaceToolHandler;
 }
 
 // Handler implementations
