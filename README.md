@@ -1,28 +1,105 @@
 # ClickUp MCP Server
 
-This project implements a Model Context Protocol (MCP) server for interacting with the ClickUp API. It provides tools and resources for accessing ClickUp data, such as workspaces, spaces, tasks, and docs.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+[![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.6.1-orange)](https://github.com/modelcontextprotocol/typescript-sdk)
 
-## Architecture
+A Model Context Protocol (MCP) server that provides a standardized interface for AI assistants to interact with the ClickUp API. This server enables AI systems to access and manipulate ClickUp data such as workspaces, spaces, folders, lists, tasks, docs, comments, and checklists through a consistent protocol.
 
-The server is built using the MCP SDK and follows a modular architecture:
+## Table of Contents
 
-- `src/index.ts`: Main server entry point and handler registration
-- `src/clickup-client/`: API clients for interacting with ClickUp
-- `src/tools/`: Tool implementations for various ClickUp features
-- `src/resources/`: Resource implementations for accessing ClickUp data
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage Examples](#usage-examples)
+- [Available Tools](#available-tools)
+- [Available Resources](#available-resources)
+- [Implementation Details](#implementation-details)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Overview
+
+The ClickUp MCP Server acts as a bridge between AI assistants and the ClickUp platform by:
+
+1. Exposing ClickUp data as MCP resources with standardized URIs
+2. Providing MCP tools for performing operations on ClickUp entities
+3. Handling authentication and API communication with ClickUp
+4. Formatting responses according to the MCP specification
+
+This enables AI assistants to seamlessly interact with ClickUp data and functionality without needing to understand the specifics of the ClickUp API.
+
+## Features
+
+- **Comprehensive API Coverage**: Access to workspaces, spaces, folders, lists, tasks, docs, comments, and checklists
+- **Standardized Interface**: Consistent MCP-compliant tools and resources
+- **Flexible Authentication**: Support for both API token and OAuth authentication methods
+- **Error Handling**: Robust error handling and reporting
+- **Resource-Based Access**: URI-addressable resources for data retrieval
+- **Tool-Based Operations**: Function-like tools for performing actions
+
+## Prerequisites
+
+- Node.js 16.0.0 or higher
+- npm or yarn
+- A ClickUp account with API access
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/clickup-server.git
+   cd clickup-server
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Build the server:
+   ```bash
+   npm run build
+   ```
 
 ## Configuration
 
-To use this server, you need to configure it with your ClickUp API token. This is done through the MCP settings file:
+### Authentication
 
-1. Copy the `mcp-settings-example.json` file to your MCP settings location:
-   - For Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
-   - For Claude VSCode Extension: `~/.vscode/extensions/saoudrizwan.claude-dev-x.x.x/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+The server requires authentication with the ClickUp API. You can use either an API token (simplest) or OAuth credentials.
 
-2. Replace `"your_api_token_here"` with your actual ClickUp API token
-3. Update the `"args"` path to point to the correct location of the server on your system
+#### Option 1: API Token (Recommended)
 
-Example configuration:
+1. Log in to your ClickUp account
+2. Go to Settings > Apps
+3. Click on "Generate API Token"
+4. Copy the generated token
+
+#### Option 2: OAuth
+
+1. Create a ClickUp OAuth application at https://clickup.com/api/developer/
+2. Get your Client ID and Client Secret
+3. Run the helper script to get an access token:
+   ```bash
+   node scripts/get-access-token.js
+   ```
+
+### MCP Settings Configuration
+
+To use this server with an MCP client (like Claude), you need to configure it in the MCP settings file:
+
+1. For Claude Desktop:
+   - Open the existing config file at `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
+   - Add or modify the `mcpServers` section as shown below
+
+2. For Claude VSCode Extension:
+   - Locate the settings file at `~/.vscode/extensions/saoudrizwan.claude-dev-x.x.x/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+   - Add or modify the `mcpServers` section as shown below
+
+3. Add the following configuration, replacing placeholders with your actual values:
+
 ```json
 {
   "mcpServers": {
@@ -39,141 +116,259 @@ Example configuration:
 }
 ```
 
-### Getting a ClickUp API Token
+## Usage Examples
 
-To get a ClickUp API token:
-
-1. Log in to your ClickUp account
-2. Go to Settings > Apps
-3. Click on "Generate API Token"
-4. Copy the generated token and use it in your MCP settings file
-
-## Available Tools
-
-This server provides the following tools for interacting with ClickUp:
-
-### Workspace and Space Tools
-- `get_workspaces`: Get the list of workspaces the user has access to
-- `get_spaces`: Get the spaces in a workspace
-
-### Document Tools
-- `get_docs_from_workspace`: Get all docs from a workspace with filtering options
-- `get_doc_content`: Get the content of a specific doc
-- `get_doc_pages`: Get the pages of a doc with formatting options
-- `search_docs`: Search for docs in a workspace (limited functionality)
-
-### Task Tools
-- `get_tasks`: Get tasks from a list, folder, or space
-- `get_task_details`: Get detailed information about a task
-- `create_task`: Create a new task in a list
-- `update_task`: Update an existing task
-
-## Example Usage
-
-Here are some examples of how to use the tools:
+### Working with Workspaces and Spaces
 
 ```javascript
 // Get all workspaces
-get_workspaces()
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_workspaces",
+  arguments: {}
+})
 
 // Get spaces in a workspace
-get_spaces({ workspace_id: "9011839976" })
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_spaces",
+  arguments: { 
+    workspace_id: "9011839976" 
+  }
+})
 
+// Get a specific space
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_space",
+  arguments: { 
+    space_id: "90113637923" 
+  }
+})
+```
+
+### Working with Tasks
+
+```javascript
+// Get tasks from a list
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_tasks",
+  arguments: {
+    list_id: "901109776097",
+    include_closed: false
+  }
+})
+
+// Get detailed information about a task
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_task_details",
+  arguments: {
+    task_id: "86rkjvttt",
+    include_subtasks: true
+  }
+})
+
+// Create a new task
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "create_task",
+  arguments: {
+    list_id: "901109776097",
+    name: "New task from MCP",
+    description: "This task was created using the ClickUp MCP Server",
+    priority: 3,
+    due_date: 1714521600000
+  }
+})
+```
+
+### Working with Documents
+
+```javascript
 // Get all docs in a workspace
-get_docs_from_workspace({ 
-  workspace_id: "9011839976",
-  deleted: false,
-  archived: false,
-  limit: 50
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_docs_from_workspace",
+  arguments: { 
+    workspace_id: "9011839976",
+    deleted: false,
+    archived: false
+  }
 })
 
 // Get content of a specific doc
-get_doc_content({ 
-  doc_id: "8cjbgz8-911", 
-  workspace_id: "9011839976" 
-})
-
-// Get tasks from a list
-get_tasks({
-  container_type: "list",
-  container_id: "123456789",
-  include_closed: false
-})
-```
-
-## MCP Tool Implementation Guide
-
-### Direct Handler Registration
-
-This approach registers handlers directly in the main server file, which ensures proper response formatting:
-
-1. Add tool definitions to the appropriate module (e.g., `src/tools/doc-tools.ts`)
-2. Implement direct handlers in `src/index.ts`
-
-Example:
-```typescript
-// In src/index.ts
-this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const toolName = request.params.name;
-  const args = request.params.arguments;
-  
-  // Handle get_feature tool
-  if (toolName === 'get_feature') {
-    console.log('Direct handler for get_feature called with args:', JSON.stringify(args, null, 2));
-    
-    // Type assertion to avoid TypeScript errors
-    const { feature_id } = args as { feature_id: string };
-    
-    if (!feature_id) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: 'Error: feature_id is required',
-          },
-        ],
-        isError: true,
-      };
-    }
-    
-    try {
-      // Create clients
-      const featureClient = createFeatureClient(createClickUpClient());
-      
-      // Get the feature data
-      const result = await featureClient.getFeature(feature_id);
-      
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error getting feature: ${error.message}`,
-          },
-        ],
-        isError: true,
-      };
-    }
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "get_doc_content",
+  arguments: { 
+    doc_id: "8cjbgz8-911", 
+    workspace_id: "9011839976" 
   }
-  
-  // Not our tool, let other handlers process it
-  return {};
-});
+})
+
+// Search for docs in a workspace
+use_mcp_tool({
+  server_name: "clickup",
+  tool_name: "search_docs",
+  arguments: { 
+    workspace_id: "9011839976",
+    query: "project plan"
+  }
+})
 ```
 
-## Important Implementation Details
+### Accessing Resources
+
+```javascript
+// Get task details
+access_mcp_resource({
+  server_name: "clickup",
+  uri: "clickup://task/86rkjvttt"
+})
+
+// Get lists in a folder
+access_mcp_resource({
+  server_name: "clickup",
+  uri: "clickup://folder/90115795569/lists"
+})
+
+// Get comments for a task
+access_mcp_resource({
+  server_name: "clickup",
+  uri: "clickup://task/868czp2t3/comments"
+})
+```
+
+## Available Tools
+
+The server provides the following tools for interacting with ClickUp:
+
+### Workspace and Authentication Tools
+- `get_workspaces`: Get the list of workspaces the user has access to
+- `get_workspace_seats`: Get information about seats in a workspace
+
+### Space Tools
+- `get_spaces`: Get spaces within a workspace
+- `get_space`: Get details of a specific space
+
+### Folder Tools
+- `create_folder`: Create a new folder in a space
+- `update_folder`: Update an existing folder
+- `delete_folder`: Delete a folder
+
+### List Tools
+- `get_lists`: Get lists in a folder or space
+- `get_folderless_lists`: Get lists not in any folder
+- `get_list`: Get details of a specific list
+- `create_list`: Create a new list in a folder or space
+- `create_folderless_list`: Create a list not in any folder
+- `update_list`: Update an existing list
+- `delete_list`: Delete a list
+- `create_list_from_template_in_folder`: Create a list from a template in a folder
+- `create_list_from_template_in_space`: Create a list from a template in a space
+
+### Task Tools
+- `get_tasks`: Get tasks from a list
+- `get_task_details`: Get detailed information about a task
+- `create_task`: Create a new task
+- `update_task`: Update an existing task
+- `add_task_to_list`: Add a task to a list
+- `remove_task_from_list`: Remove a task from a list
+
+### Document Tools
+- `get_docs_from_workspace`: Get all docs from a workspace
+- `get_doc_content`: Get the content of a specific doc
+- `get_doc_pages`: Get the pages of a doc
+- `search_docs`: Search for docs in a workspace
+
+### Checklist Tools
+- `create_checklist`: Create a new checklist in a task
+- `update_checklist`: Update an existing checklist
+- `delete_checklist`: Delete a checklist
+- `create_checklist_item`: Create a new checklist item
+- `update_checklist_item`: Update an existing checklist item
+- `delete_checklist_item`: Delete a checklist item
+
+### Comment Tools
+- `get_task_comments`: Get comments for a task
+- `create_task_comment`: Create a comment on a task
+- `get_chat_view_comments`: Get comments for a chat view
+- `create_chat_view_comment`: Create a comment on a chat view
+- `get_list_comments`: Get comments for a list
+- `create_list_comment`: Create a comment on a list
+- `update_comment`: Update an existing comment
+- `delete_comment`: Delete a comment
+- `get_threaded_comments`: Get threaded comments for a parent comment
+- `create_threaded_comment`: Create a threaded comment
+
+## Available Resources
+
+The server exposes ClickUp data through URI-addressable resources:
+
+### Task Resources
+- `clickup://task/{task_id}`: Details of a specific task
+- `clickup://task/{task_id}/comments`: Comments for a specific task
+- `clickup://task/{task_id}/checklist`: Checklists for a specific task
+
+### List Resources
+- `clickup://list/{list_id}`: Details of a specific list
+- `clickup://list/{list_id}/comments`: Comments for a specific list
+
+### Folder Resources
+- `clickup://folder/{folder_id}`: Details of a specific folder
+- `clickup://folder/{folder_id}/lists`: Lists in a specific folder
+
+### Space Resources
+- `clickup://space/{space_id}`: Details of a specific space
+- `clickup://space/{space_id}/folders`: Folders in a specific space
+- `clickup://space/{space_id}/lists`: Folderless lists in a specific space
+
+### Workspace Resources
+- `clickup://workspace/{workspace_id}/spaces`: Spaces in a specific workspace
+- `clickup://workspace/{workspace_id}/doc/{doc_id}`: Content of a specific doc
+
+### Comment Resources
+- `clickup://view/{view_id}/comments`: Comments for a specific chat view
+- `clickup://comment/{comment_id}/reply`: Threaded comments for a specific comment
+
+### Checklist Resources
+- `clickup://checklist/{checklist_id}/items`: Items in a specific checklist
+
+## Implementation Details
+
+### Architecture
+
+The server follows a modular architecture organized by ClickUp entity types:
+
+```
+clickup-server/
+├── src/
+│   ├── index.ts                 # Main server entry point
+│   ├── app.ts                   # Express app setup (for HTTP transport)
+│   ├── clickup-client/          # API clients for ClickUp
+│   │   ├── auth.ts              # Authentication handling
+│   │   ├── tasks.ts             # Task-related API calls
+│   │   ├── lists.ts             # List-related API calls
+│   │   ├── spaces.ts            # Space-related API calls
+│   │   ├── folders.ts           # Folder-related API calls
+│   │   ├── docs.ts              # Doc-related API calls
+│   │   ├── comments.ts          # Comment-related API calls
+│   │   ├── checklists.ts        # Checklist-related API calls
+│   │   └── index.ts             # Client exports
+│   ├── tools/                   # MCP tool implementations
+│   ├── resources/               # MCP resource implementations
+│   ├── controllers/             # Business logic controllers
+│   ├── routes/                  # Express routes (for HTTP)
+│   └── services/                # Service layer
+└── scripts/
+    └── get-access-token.js      # Helper for OAuth token retrieval
+```
 
 ### Response Format
 
-The most critical aspect of implementing MCP tools is ensuring the correct response format. All tool handlers must return an object with a `content` array property:
+All tool handlers return an object with a `content` array property:
 
 ```typescript
 return {
@@ -200,67 +395,10 @@ return {
 };
 ```
 
-### Error Handling
-
-Always implement proper error handling in tool handlers:
-
-```typescript
-try {
-  // Implementation...
-} catch (error: any) {
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `Error: ${error.message}`,
-      },
-    ],
-    isError: true,
-  };
-}
-```
-
-### Type Safety
-
-Use TypeScript type assertions when extracting arguments:
-
-```typescript
-const { param1, param2 } = args as { param1: string; param2: number };
-```
-
-## Testing Tools
-
-To test your tools:
-
-1. Build the server: `npm run build`
-2. Run the server: `node test-server.js`
-3. Use the MCP client to call your tools
-
-## Resource Implementation
-
-Resources provide a way to access ClickUp data using URI templates. Implement resources in the `src/resources/` directory following the same pattern as tools.
-
-Example resource URI: `clickup://workspace/{workspace_id}/doc/{doc_id}`
-
-## Troubleshooting
-
-If you encounter issues with tool responses:
-
-1. Check the response format - ensure it has a `content` array property
-2. Add logging to see what's happening in the handler
-3. Try implementing a direct handler in `src/index.ts`
-4. Verify the ClickUp API client is working correctly
-
 ## Contributing
 
-When adding new tools:
-
-1. Add the tool definition to the appropriate module
-2. Implement the handler function
-3. Register the tool in the main server file
-4. Add tests for the tool
-5. Update this README with any new information
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to contribute to this project.
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
