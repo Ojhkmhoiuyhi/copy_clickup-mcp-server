@@ -1,5 +1,6 @@
 # ClickUp MCP Server
 
+[![npm version](https://img.shields.io/npm/v/clickup-mcp-server.svg)](https://www.npmjs.com/package/clickup-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.6.1-orange)](https://github.com/modelcontextprotocol/typescript-sdk)
@@ -49,6 +50,30 @@ This enables AI assistants to seamlessly interact with ClickUp data and function
 - A ClickUp account with API access
 
 ## Installation
+
+### From npm (Recommended)
+
+#### Global Installation
+
+For command-line usage:
+
+```bash
+npm install -g clickup-mcp-server
+```
+
+This installs the ClickUp MCP Server globally, making it available as a command-line tool.
+
+#### Local Installation
+
+For use as a dependency in your project:
+
+```bash
+npm install clickup-mcp-server
+```
+
+Then use it in your code as shown in the examples directory.
+
+### From Source
 
 1. Clone the repository:
    ```bash
@@ -101,6 +126,25 @@ To use this server with an MCP client (like Claude), you need to configure it in
    - Add or modify the `mcpServers` section as shown below
 
 3. Add the following configuration, replacing placeholders with your actual values:
+
+#### If installed globally via npm:
+
+```json
+{
+  "mcpServers": {
+    "clickup": {
+      "command": "clickup-mcp-server",
+      "env": {
+        "CLICKUP_API_TOKEN": "your_api_token_here"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+#### If installed from source:
 
 ```json
 {

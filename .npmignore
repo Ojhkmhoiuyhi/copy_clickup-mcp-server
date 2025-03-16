@@ -53,8 +53,7 @@ yarn-error.log*
 # Dependency directories
 node_modules/
 
-# Examples and scripts
-examples/
+# Scripts
 scripts/
 
 # GitVersion

@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.8.0] - 2025-03-16
+
+### Added
+- Published package to npm registry
+- Added binary executable support via "bin" field in package.json
+- Added npm installation instructions to README.md
+- Added npm version badge to README.md
+
+### Changed
+- Updated .npmignore to include examples directory in the published package
+
 ## [1.7.0] - 2025-03-16
 
 ### Changed
