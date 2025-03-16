@@ -200,17 +200,27 @@ async function handleGetDocContent(args: any) {
   const { doc_id, workspace_id } = args;
   
   if (!doc_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'doc_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'doc_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!workspace_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'workspace_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'workspace_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   try {
@@ -237,7 +247,15 @@ async function handleGetDocContent(args: any) {
     };
   } catch (error: any) {
     console.error('Error getting doc content:', error);
-    throw error;
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting doc content: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }
 
@@ -247,17 +265,27 @@ async function handleSearchDocs(args: any) {
   const { workspace_id, query, cursor } = args;
   
   if (!workspace_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'workspace_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'workspace_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!query) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'query is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'query is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   try {
@@ -274,7 +302,15 @@ async function handleSearchDocs(args: any) {
     };
   } catch (error: any) {
     console.error('Error searching docs:', error);
-    throw error;
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error searching docs: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }
 
@@ -284,10 +320,15 @@ async function handleGetDocsFromWorkspace(args: any) {
   const { workspace_id, cursor, deleted, archived, limit } = args;
   
   if (!workspace_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'workspace_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'workspace_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   try {
@@ -309,7 +350,15 @@ async function handleGetDocsFromWorkspace(args: any) {
     };
   } catch (error: any) {
     console.error('Error getting docs from workspace:', error);
-    throw error;
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting docs from workspace: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }
 
@@ -319,17 +368,27 @@ async function handleGetDocPages(args: any) {
   const { doc_id, workspace_id, content_format } = args;
   
   if (!doc_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'doc_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'doc_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!workspace_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'workspace_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'workspace_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   try {
@@ -346,6 +405,14 @@ async function handleGetDocPages(args: any) {
     };
   } catch (error: any) {
     console.error('Error getting doc pages:', error);
-    throw error;
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting doc pages: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }

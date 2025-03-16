@@ -38,7 +38,12 @@ export class AuthClient {
    * @returns The authorized user's information
    */
   async getAuthorizedUser(): Promise<AuthorizedUser> {
-    return this.client.get('/user');
+    try {
+      return await this.client.get('/user');
+    } catch (error) {
+      console.error('Error getting authorized user:', error);
+      throw error;
+    }
   }
 
   /**
@@ -46,7 +51,12 @@ export class AuthClient {
    * @returns A list of workspaces
    */
   async getWorkspaces(): Promise<{ teams: Workspace[] }> {
-    return this.client.get('/team');
+    try {
+      return await this.client.get('/team');
+    } catch (error) {
+      console.error('Error getting workspaces:', error);
+      throw error;
+    }
   }
 
   /**
@@ -99,7 +109,12 @@ export class AuthClient {
       };
     };
   }> }> {
-    return this.client.get(`/team/${workspaceId}/space`);
+    try {
+      return await this.client.get(`/team/${workspaceId}/space`);
+    } catch (error) {
+      console.error('Error getting spaces:', error);
+      throw error;
+    }
   }
 
   /**
@@ -159,7 +174,12 @@ export class AuthClient {
     }>;
     permission_level: string;
   }> }> {
-    return this.client.get(`/space/${spaceId}/folder`);
+    try {
+      return await this.client.get(`/space/${spaceId}/folder`);
+    } catch (error) {
+      console.error('Error getting folders:', error);
+      throw error;
+    }
   }
 
   /**
@@ -206,7 +226,12 @@ export class AuthClient {
     override_statuses: boolean;
     permission_level: string;
   }> }> {
-    return this.client.get(`/folder/${folderId}/list`);
+    try {
+      return await this.client.get(`/folder/${folderId}/list`);
+    } catch (error) {
+      console.error('Error getting lists:', error);
+      throw error;
+    }
   }
 
   /**
@@ -247,7 +272,12 @@ export class AuthClient {
     override_statuses: boolean;
     permission_level: string;
   }> }> {
-    return this.client.get(`/space/${spaceId}/list`);
+    try {
+      return await this.client.get(`/space/${spaceId}/list`);
+    } catch (error) {
+      console.error('Error getting lists from space:', error);
+      throw error;
+    }
   }
 
   /**
@@ -265,7 +295,12 @@ export class AuthClient {
     total_guest_seats: number;
     empty_guest_seats: number;
   }> {
-    return this.client.get(`/team/${workspaceId}/seats`);
+    try {
+      return await this.client.get(`/team/${workspaceId}/seats`);
+    } catch (error) {
+      console.error('Error getting workspace seats:', error);
+      throw error;
+    }
   }
 }
 

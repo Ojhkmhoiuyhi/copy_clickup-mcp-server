@@ -99,14 +99,27 @@ async function handleGetSpaces(args: any) {
     const spaces = await spacesClient.getSpacesFromWorkspace(workspace_id);
     console.log(`Got ${spaces.length} spaces`);
     
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(spaces, null, 2),
-        },
-      ],
-    };
+    try {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(spaces, null, 2),
+          },
+        ],
+      };
+    } catch (error: any) {
+      console.error('Error stringifying spaces:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error stringifying spaces: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
   } catch (error: any) {
     console.error('Error getting spaces:', error);
     return {
@@ -136,14 +149,27 @@ async function handleGetSpace(args: any) {
     const space = await spacesClient.getSpace(space_id);
     console.log(`Got space: ${space.name}`);
     
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(space, null, 2),
-        },
-      ],
-    };
+    try {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(space, null, 2),
+          },
+        ],
+      };
+    } catch (error: any) {
+      console.error('Error stringifying space:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error stringifying space: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
   } catch (error: any) {
     console.error('Error getting space:', error);
     return {

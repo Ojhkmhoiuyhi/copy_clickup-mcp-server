@@ -27,28 +27,6 @@ export const CHECKLIST_TOOLS = [
           type: 'string',
           description: 'The name of the checklist',
         },
-        items: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              name: {
-                type: 'string',
-                description: 'The name of the checklist item',
-              },
-              assignee: {
-                type: 'number',
-                description: 'The ID of the user to assign to the checklist item',
-              },
-              resolved: {
-                type: 'boolean',
-                description: 'Whether the checklist item is resolved',
-              },
-            },
-            required: ['name'],
-          },
-          description: 'The items to add to the checklist',
-        },
       },
       required: ['task_id', 'name'],
     },
@@ -212,168 +190,313 @@ export function setupChecklistTools(server: Server): (request: any) => Promise<a
 // Handler implementations
 
 async function handleCreateChecklist(args: any) {
-  const { task_id, ...checklistParams } = args;
+  const { task_id, items, ...checklistParams } = args;
   
   if (!task_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'task_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'task_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!checklistParams.name) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'name is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'name is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
-  const checklist = await checklistsClient.createChecklist(task_id, checklistParams as CreateChecklistParams);
+  // Note: The ClickUp API doesn't support creating items when creating a checklist
+  // If items were provided, log a warning
+  if (items) {
+    console.warn('The ClickUp API does not support creating checklist items when creating a checklist. Items must be created separately using the create_checklist_item tool.');
+  }
   
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(checklist, null, 2),
-      },
-    ],
-  };
+  try {
+    const checklist = await checklistsClient.createChecklist(task_id, checklistParams as CreateChecklistParams);
+    
+    // If items were provided, add a note in the response
+    let responseText = JSON.stringify(checklist, null, 2);
+    if (items) {
+      responseText = `Note: The ClickUp API does not support creating checklist items when creating a checklist. Items must be created separately using the create_checklist_item tool.\n\n${responseText}`;
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: responseText,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating checklist:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating checklist: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
 }
 
 async function handleUpdateChecklist(args: any) {
   const { checklist_id, name } = args;
   
   if (!checklist_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!name) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'name is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'name is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
-  const checklist = await checklistsClient.updateChecklist(checklist_id, { name });
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(checklist, null, 2),
-      },
-    ],
-  };
+  try {
+    const checklist = await checklistsClient.updateChecklist(checklist_id, { name });
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(checklist, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error updating checklist:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error updating checklist: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
 }
 
 async function handleDeleteChecklist(args: any) {
   const { checklist_id } = args;
   
   if (!checklist_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
-  const result = await checklistsClient.deleteChecklist(checklist_id);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(result, null, 2),
-      },
-    ],
-  };
+  try {
+    const result = await checklistsClient.deleteChecklist(checklist_id);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error deleting checklist:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error deleting checklist: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
 }
 
 async function handleCreateChecklistItem(args: any) {
   const { checklist_id, ...itemParams } = args;
   
   if (!checklist_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!itemParams.name) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'name is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'name is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
-  const checklistItem = await checklistsClient.createChecklistItem(checklist_id, itemParams as CreateChecklistItemParams);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(checklistItem, null, 2),
-      },
-    ],
-  };
+  try {
+    const checklistItem = await checklistsClient.createChecklistItem(checklist_id, itemParams as CreateChecklistItemParams);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(checklistItem, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating checklist item:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating checklist item: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
 }
 
 async function handleUpdateChecklistItem(args: any) {
   const { checklist_id, checklist_item_id, ...itemParams } = args;
   
   if (!checklist_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!checklist_item_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_item_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_item_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
-  const checklistItem = await checklistsClient.updateChecklistItem(checklist_id, checklist_item_id, itemParams as UpdateChecklistItemParams);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(checklistItem, null, 2),
-      },
-    ],
-  };
+  try {
+    const checklistItem = await checklistsClient.updateChecklistItem(checklist_id, checklist_item_id, itemParams as UpdateChecklistItemParams);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(checklistItem, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error updating checklist item:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error updating checklist item: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
 }
 
 async function handleDeleteChecklistItem(args: any) {
   const { checklist_id, checklist_item_id } = args;
   
   if (!checklist_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
   if (!checklist_item_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'checklist_item_id is required'
-    );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'checklist_item_id is required',
+        },
+      ],
+      isError: true,
+    };
   }
   
-  const result = await checklistsClient.deleteChecklistItem(checklist_id, checklist_item_id);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(result, null, 2),
-      },
-    ],
-  };
+  try {
+    const result = await checklistsClient.deleteChecklistItem(checklist_id, checklist_item_id);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error deleting checklist item:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error deleting checklist item: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
 }

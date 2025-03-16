@@ -44,6 +44,9 @@ export interface Task {
     name: string;
   };
   url: string;
+  subtasks?: Task[]; // Add subtasks property
+  parent?: string; // Add parent property
+  top_level_parent?: string; // Add top_level_parent property
 }
 
 export interface CreateTaskParams {
@@ -125,33 +128,16 @@ export class TasksClient {
     return this.client.get(`/list/${listId}/task`, params);
   }
 
-  /**
-   * Get tasks from a specific folder
-   * @param folderId The ID of the folder to get tasks from
-   * @param params Optional parameters for filtering tasks
-   * @returns A list of tasks
-   */
-  async getTasksFromFolder(folderId: string, params?: GetTasksParams): Promise<{ tasks: Task[] }> {
-    return this.client.get(`/folder/${folderId}/task`, params);
-  }
-
-  /**
-   * Get tasks from a specific space
-   * @param spaceId The ID of the space to get tasks from
-   * @param params Optional parameters for filtering tasks
-   * @returns A list of tasks
-   */
-  async getTasksFromSpace(spaceId: string, params?: GetTasksParams): Promise<{ tasks: Task[] }> {
-    return this.client.get(`/space/${spaceId}/task`, params);
-  }
+  // Removed pseudo endpoints for getting tasks from spaces and folders
 
   /**
    * Get a specific task by ID
    * @param taskId The ID of the task to get
+   * @param params Optional parameters (include_subtasks)
    * @returns The task details
    */
-  async getTask(taskId: string): Promise<Task> {
-    return this.client.get(`/task/${taskId}`);
+  async getTask(taskId: string, params?: { include_subtasks?: boolean }): Promise<Task> {
+    return this.client.get(`/task/${taskId}`, params);
   }
 
   /**
@@ -181,6 +167,30 @@ export class TasksClient {
    */
   async deleteTask(taskId: string): Promise<{ success: boolean }> {
     return this.client.delete(`/task/${taskId}`);
+  }
+
+  /**
+   * Get subtasks of a specific task
+   * @param taskId The ID of the task to get subtasks for
+   * @returns A list of subtasks
+   */
+  async getSubtasks(taskId: string): Promise<Task[]> {
+    try {
+      // First, we need to get the task to find its list ID
+      const task = await this.getTask(taskId);
+      if (!task.list || !task.list.id) {
+        throw new Error('Task does not have a list ID');
+      }
+      
+      // Then, get all tasks from the list with subtasks included
+      const result = await this.getTasksFromList(task.list.id, { subtasks: true });
+      
+      // Filter tasks to find those that have the specified task as parent
+      return result.tasks.filter(task => task.parent === taskId);
+    } catch (error) {
+      console.error(`Error getting subtasks for task ${taskId}:`, error);
+      return [];
+    }
   }
 }
 

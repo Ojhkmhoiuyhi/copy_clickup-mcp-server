@@ -7,11 +7,15 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { createClickUpClient } from '../clickup-client/index.js';
 import { createTasksClient, Task, CreateTaskParams, UpdateTaskParams } from '../clickup-client/tasks.js';
+import { createListsClient } from '../clickup-client/lists.js';
+import { createFoldersClient } from '../clickup-client/folders.js';
 import { createAuthClient } from '../clickup-client/auth.js';
 
 // Create clients
 const clickUpClient = createClickUpClient();
 const tasksClient = createTasksClient(clickUpClient);
+const listsClient = createListsClient(clickUpClient);
+const foldersClient = createFoldersClient(clickUpClient);
 const authClient = createAuthClient(clickUpClient);
 
 // Tool definitions
@@ -32,22 +36,21 @@ export const TASK_TOOLS = [
   },
   {
     name: 'get_tasks',
-    description: 'Get tasks from a list, folder, or space',
+    description: 'Get tasks from a list',
     inputSchema: {
       type: 'object',
       properties: {
-        container_type: {
+        list_id: {
           type: 'string',
-          enum: ['list', 'folder', 'space'],
-          description: 'The type of container to get tasks from',
-        },
-        container_id: {
-          type: 'string',
-          description: 'The ID of the container to get tasks from',
+          description: 'The ID of the list to get tasks from',
         },
         include_closed: {
           type: 'boolean',
           description: 'Whether to include closed tasks',
+        },
+        subtasks: {
+          type: 'boolean',
+          description: 'Whether to include subtasks in the results',
         },
         page: {
           type: 'number',
@@ -62,7 +65,7 @@ export const TASK_TOOLS = [
           description: 'Whether to reverse the order',
         },
       },
-      required: ['container_type', 'container_id'],
+      required: ['list_id'],
     },
   },
   {
@@ -74,6 +77,10 @@ export const TASK_TOOLS = [
         task_id: {
           type: 'string',
           description: 'The ID of the task to get',
+        },
+        include_subtasks: {
+          type: 'boolean',
+          description: 'Whether to include subtasks in the task details',
         },
       },
       required: ['task_id'],
@@ -254,6 +261,237 @@ export const TASK_TOOLS = [
       required: ['container_type', 'container_id'],
     },
   },
+  {
+    name: 'create_folder',
+    description: 'Create a new folder in a space',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        space_id: {
+          type: 'string',
+          description: 'The ID of the space to create the folder in',
+        },
+        name: {
+          type: 'string',
+          description: 'The name of the folder',
+        },
+      },
+      required: ['space_id', 'name'],
+    },
+  },
+  {
+    name: 'update_folder',
+    description: 'Update an existing folder',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        folder_id: {
+          type: 'string',
+          description: 'The ID of the folder to update',
+        },
+        name: {
+          type: 'string',
+          description: 'The new name of the folder',
+        },
+      },
+      required: ['folder_id', 'name'],
+    },
+  },
+  {
+    name: 'delete_folder',
+    description: 'Delete a folder',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        folder_id: {
+          type: 'string',
+          description: 'The ID of the folder to delete',
+        },
+      },
+      required: ['folder_id'],
+    },
+  },
+  {
+    name: 'create_list',
+    description: 'Create a new list in a folder or space',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        container_type: {
+          type: 'string',
+          enum: ['folder', 'space'],
+          description: 'The type of container to create the list in',
+        },
+        container_id: {
+          type: 'string',
+          description: 'The ID of the container to create the list in',
+        },
+        name: {
+          type: 'string',
+          description: 'The name of the list',
+        },
+      },
+      required: ['container_type', 'container_id', 'name'],
+    },
+  },
+  {
+    name: 'get_folderless_lists',
+    description: 'Get folderless lists from a space',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        space_id: {
+          type: 'string',
+          description: 'The ID of the space to get folderless lists from',
+        },
+      },
+      required: ['space_id'],
+    },
+  },
+  {
+    name: 'create_folderless_list',
+    description: 'Create a new folderless list in a space',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        space_id: {
+          type: 'string',
+          description: 'The ID of the space to create the folderless list in',
+        },
+        name: {
+          type: 'string',
+          description: 'The name of the folderless list',
+        },
+      },
+      required: ['space_id', 'name'],
+    },
+  },
+  {
+    name: 'get_list',
+    description: 'Get a specific list by ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        list_id: {
+          type: 'string',
+          description: 'The ID of the list to get',
+        },
+      },
+      required: ['list_id'],
+    },
+  },
+  {
+    name: 'update_list',
+    description: 'Update an existing list',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        list_id: {
+          type: 'string',
+          description: 'The ID of the list to update',
+        },
+        name: {
+          type: 'string',
+          description: 'The new name of the list',
+        },
+      },
+      required: ['list_id', 'name'],
+    },
+  },
+  {
+    name: 'delete_list',
+    description: 'Delete a list',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        list_id: {
+          type: 'string',
+          description: 'The ID of the list to delete',
+        },
+      },
+      required: ['list_id'],
+    },
+  },
+  {
+    name: 'add_task_to_list',
+    description: 'Add a task to a list',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        list_id: {
+          type: 'string',
+          description: 'The ID of the list to add the task to',
+        },
+        task_id: {
+          type: 'string',
+          description: 'The ID of the task to add',
+        },
+      },
+      required: ['list_id', 'task_id'],
+    },
+  },
+  {
+    name: 'remove_task_from_list',
+    description: 'Remove a task from a list',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        list_id: {
+          type: 'string',
+          description: 'The ID of the list to remove the task from',
+        },
+        task_id: {
+          type: 'string',
+          description: 'The ID of the task to remove',
+        },
+      },
+      required: ['list_id', 'task_id'],
+    },
+  },
+  {
+    name: 'create_list_from_template_in_folder',
+    description: 'Create a new list from a template in a folder',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        folder_id: {
+          type: 'string',
+          description: 'The ID of the folder to create the list in',
+        },
+        template_id: {
+          type: 'string',
+          description: 'The ID of the template to use',
+        },
+        name: {
+          type: 'string',
+          description: 'The name of the list',
+        },
+      },
+      required: ['folder_id', 'template_id', 'name'],
+    },
+  },
+  {
+    name: 'create_list_from_template_in_space',
+    description: 'Create a new list from a template in a space',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        space_id: {
+          type: 'string',
+          description: 'The ID of the space to create the list in',
+        },
+        template_id: {
+          type: 'string',
+          description: 'The ID of the template to use',
+        },
+        name: {
+          type: 'string',
+          description: 'The name of the list',
+        },
+      },
+      required: ['space_id', 'template_id', 'name'],
+    },
+  },
 ];
 
 export function setupTaskTools(server: Server): (request: any) => Promise<any> {
@@ -280,6 +518,32 @@ export function setupTaskTools(server: Server): (request: any) => Promise<any> {
           return await handleGetSpaces(args);
         case 'get_lists':
           return await handleGetLists(args);
+        case 'create_folder':
+          return await handleCreateFolder(args);
+        case 'update_folder':
+          return await handleUpdateFolder(args);
+        case 'delete_folder':
+          return await handleDeleteFolder(args);
+        case 'create_list':
+          return await handleCreateList(args);
+        case 'get_folderless_lists':
+          return await handleGetFolderlessLists(args);
+        case 'create_folderless_list':
+          return await handleCreateFolderlessList(args);
+        case 'get_list':
+          return await handleGetList(args);
+        case 'update_list':
+          return await handleUpdateList(args);
+        case 'delete_list':
+          return await handleDeleteList(args);
+        case 'add_task_to_list':
+          return await handleAddTaskToList(args);
+        case 'remove_task_from_list':
+          return await handleRemoveTaskFromList(args);
+        case 'create_list_from_template_in_folder':
+          return await handleCreateListFromTemplateInFolder(args);
+        case 'create_list_from_template_in_space':
+          return await handleCreateListFromTemplateInSpace(args);
         default:
           return {
             content: [
@@ -311,117 +575,114 @@ export function setupTaskTools(server: Server): (request: any) => Promise<any> {
 // Handler implementations
 
 async function handleGetTasks(args: any) {
-  const { container_type, container_id, ...params } = args;
-  
-  let tasks: Task[] = [];
-  
-  switch (container_type) {
-    case 'list':
-      const listResult = await tasksClient.getTasksFromList(container_id, params);
-      tasks = listResult.tasks;
-      break;
-    case 'folder':
-      const folderResult = await tasksClient.getTasksFromFolder(container_id, params);
-      tasks = folderResult.tasks;
-      break;
-    case 'space':
-      const spaceResult = await tasksClient.getTasksFromSpace(container_id, params);
-      tasks = spaceResult.tasks;
-      break;
-    default:
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        `Invalid container_type: ${container_type}. Must be one of: list, folder, space`
-      );
+  const { list_id, ...params } = args;
+  try {
+    const result = await tasksClient.getTasksFromList(list_id, params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error getting tasks:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting tasks: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(tasks, null, 2),
-      },
-    ],
-  };
 }
 
 async function handleGetTaskDetails(args: any) {
-  const { task_id } = args;
-  
-  if (!task_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'task_id is required'
-    );
+  const { task_id, include_subtasks } = args;
+  try {
+    // Pass include_subtasks directly to the getTask method
+    const task = await tasksClient.getTask(task_id, { include_subtasks });
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(task, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error getting task details:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting task details: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
-  
-  const task = await tasksClient.getTask(task_id);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(task, null, 2),
-      },
-    ],
-  };
 }
 
 async function handleCreateTask(args: any) {
   const { list_id, ...taskParams } = args;
-  
-  if (!list_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'list_id is required'
-    );
+  try {
+    const result = await tasksClient.createTask(list_id, taskParams as CreateTaskParams);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating task:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating task: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
-  
-  if (!taskParams.name) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'name is required'
-    );
-  }
-  
-  const task = await tasksClient.createTask(list_id, taskParams as CreateTaskParams);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(task, null, 2),
-      },
-    ],
-  };
 }
 
 async function handleUpdateTask(args: any) {
   const { task_id, ...taskParams } = args;
-  
-  if (!task_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'task_id is required'
-    );
+  try {
+    const result = await tasksClient.updateTask(task_id, taskParams as UpdateTaskParams);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error updating task:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error updating task: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
-  
-  const task = await tasksClient.updateTask(task_id, taskParams as UpdateTaskParams);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(task, null, 2),
-      },
-    ],
-  };
 }
 
 async function handleGetWorkspaces() {
   try {
     const result = await authClient.getWorkspaces();
-    
     return {
       content: [
         {
@@ -446,77 +707,71 @@ async function handleGetWorkspaces() {
 
 async function handleGetSpaces(args: any) {
   const { workspace_id } = args;
-  
-  if (!workspace_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'workspace_id is required'
-    );
+  try {
+    const result = await authClient.getSpaces(workspace_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result.spaces, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error getting spaces:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting spaces: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
-  
-  const result = await authClient.getSpaces(workspace_id);
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(result.spaces, null, 2),
-      },
-    ],
-  };
 }
 
 async function handleGetLists(args: any) {
   const { container_type, container_id } = args;
-  
-  if (!container_type || !container_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'container_type and container_id are required'
-    );
-  }
-  
-  let lists;
-  
-  switch (container_type) {
-    case 'folder':
-      const folderResult = await authClient.getLists(container_id);
-      lists = folderResult.lists;
-      break;
-    case 'space':
-      const spaceResult = await authClient.getListsFromSpace(container_id);
-      lists = spaceResult.lists;
-      break;
-    default:
+  try {
+    let result;
+    if (container_type === 'folder') {
+      result = await foldersClient.getListsFromFolder(container_id);
+    } else if (container_type === 'space') {
+      result = await listsClient.getListsFromSpace(container_id);
+    } else {
       throw new McpError(
         ErrorCode.InvalidParams,
-        `Invalid container_type: ${container_type}. Must be one of: folder, space`
+        'Invalid container_type. Must be one of: folder, space'
       );
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error(`Error getting lists from ${container_type}:`, error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting lists: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
   }
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(lists, null, 2),
-      },
-    ],
-  };
 }
 
 async function handleGetWorkspaceSeats(args: any) {
   const { workspace_id } = args;
-  
-  if (!workspace_id) {
-    throw new McpError(
-      ErrorCode.InvalidParams,
-      'workspace_id is required'
-    );
-  }
-  
   try {
     const result = await authClient.getWorkspaceSeats(workspace_id);
-    
     return {
       content: [
         {
@@ -532,6 +787,355 @@ async function handleGetWorkspaceSeats(args: any) {
         {
           type: 'text',
           text: `Error getting workspace seats: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleCreateFolder(args: any) {
+  const { space_id, name } = args;
+  try {
+    const result = await foldersClient.createFolder(space_id, { name });
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating folder:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating folder: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleUpdateFolder(args: any) {
+  const { folder_id, name } = args;
+  try {
+    const result = await foldersClient.updateFolder(folder_id, { name });
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error updating folder:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error updating folder: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleDeleteFolder(args: any) {
+  const { folder_id } = args;
+  try {
+    const result = await foldersClient.deleteFolder(folder_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error deleting folder:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error deleting folder: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleCreateList(args: any) {
+  const { container_type, container_id, name } = args;
+  try {
+    let result;
+    if (container_type === 'folder') {
+      result = await listsClient.createListInFolder(container_id, { name });
+    } else if (container_type === 'space') {
+      result = await listsClient.createFolderlessList(container_id, { name });
+    } else {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'Invalid container_type. Must be one of: folder, space'
+      );
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error(`Error creating list in ${container_type}:`, error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleGetFolderlessLists(args: any) {
+  const { space_id } = args;
+  try {
+    const result = await listsClient.getListsFromSpace(space_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error getting folderless lists:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting folderless lists: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleCreateFolderlessList(args: any) {
+  const { space_id, name } = args;
+  try {
+    const result = await listsClient.createFolderlessList(space_id, { name });
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating folderless list:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating folderless list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleGetList(args: any) {
+  const { list_id } = args;
+  try {
+    const result = await listsClient.getList(list_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error getting list:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleUpdateList(args: any) {
+  const { list_id, name } = args;
+  try {
+    const result = await listsClient.updateList(list_id, { name });
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error updating list:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error updating list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleDeleteList(args: any) {
+  const { list_id } = args;
+  try {
+    const result = await listsClient.deleteList(list_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error deleting list:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error deleting list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleAddTaskToList(args: any) {
+  const { list_id, task_id } = args;
+  try {
+    const result = await listsClient.addTaskToList(list_id, task_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error adding task to list:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error adding task to list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleRemoveTaskFromList(args: any) {
+  const { list_id, task_id } = args;
+  try {
+    const result = await listsClient.removeTaskFromList(list_id, task_id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error removing task from list:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error removing task from list: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleCreateListFromTemplateInFolder(args: any) {
+  const { folder_id, template_id, name } = args;
+  try {
+    const result = await listsClient.createListFromTemplateInFolder(folder_id, template_id, { name });
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating list from template in folder:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating list from template in folder: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleCreateListFromTemplateInSpace(args: any) {
+  const { space_id, template_id, name } = args;
+  try {
+    const result = await listsClient.createListFromTemplateInSpace(space_id, template_id, { name });
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('Error creating list from template in space:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error creating list from template in space: ${error.message}`,
         },
       ],
       isError: true,

@@ -23,7 +23,8 @@ export interface Checklist {
 
 export interface CreateChecklistParams {
   name: string;
-  items?: Omit<ChecklistItem, 'id' | 'orderindex'>[];
+  // Note: The ClickUp API doesn't support creating items when creating a checklist
+  // Items must be created separately using the createChecklistItem method
 }
 
 export interface UpdateChecklistParams {
