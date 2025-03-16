@@ -1,7 +1,7 @@
 # ClickUp MCP Server
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.6.1-orange)](https://github.com/modelcontextprotocol/typescript-sdk)
 
 A Model Context Protocol (MCP) server that provides a standardized interface for AI assistants to interact with the ClickUp API. This server enables AI systems to access and manipulate ClickUp data such as workspaces, spaces, folders, lists, tasks, docs, comments, and checklists through a consistent protocol.
@@ -43,7 +43,7 @@ This enables AI assistants to seamlessly interact with ClickUp data and function
 
 ## Prerequisites
 
-- Node.js 16.0.0 or higher
+- Node.js 18.0.0 or higher
 - npm or yarn
 - A ClickUp account with API access
 

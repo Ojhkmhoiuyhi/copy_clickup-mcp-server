@@ -19,13 +19,14 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 ## Getting Started
 
-1. Fork the repository on GitHub
-2. Clone your fork locally:
+1. Ensure you have Node.js 18.0.0 or higher installed
+2. Fork the repository on GitHub
+3. Clone your fork locally:
    ```bash
    git clone https://github.com/nsxdavid/clickup-server.git
    cd clickup-server
    ```
-3. Install dependencies:
+4. Install dependencies:
    ```bash
    npm install
    ```
