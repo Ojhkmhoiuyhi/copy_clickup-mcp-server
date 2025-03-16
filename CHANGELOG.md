@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.7.0] - 2025-03-16
+
+### Changed
+- Renamed repository from "clickup-server" to "clickup-mcp-server" to better reflect its purpose
+- Updated all references to the repository name in documentation and examples
+- Updated package name to match the repository name
+
 ## [1.6.0] - 2025-03-16
 
 ### Added
