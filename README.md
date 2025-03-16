@@ -1,5 +1,9 @@
 # ClickUp MCP Server
 
+<p align="center">
+  <img src="assets/images/clickupserverlogo.png" width="400" height="400" alt="ClickUp MCP Server Logo">
+</p>
+
 [![npm version](https://img.shields.io/npm/v/clickup-mcp-server.svg)](https://www.npmjs.com/package/clickup-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
