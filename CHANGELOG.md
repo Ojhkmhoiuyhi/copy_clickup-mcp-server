@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.10.0] - 2025-03-16
+
+### Added
+- Enhanced installation instructions in llms-install.md with detailed Node.js setup steps
+- Added Windows Package Manager (winget) installation option
+- Added detailed explanation of npx and its benefits
+
+### Changed
+- Improved documentation for AI assistants to better guide users through setup process
+
 ## [1.9.0] - 2025-03-16
 
 ### Added
