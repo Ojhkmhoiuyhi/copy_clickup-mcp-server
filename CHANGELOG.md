@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.11.0] - 2025-03-19
+
+### Added
+- Added alternate installation section for npx in README.md
+- Added configuration file locations section in both README.md and llms-install.md
+
+### Changed
+- Simplified installation instructions in both README.md and llms-install.md
+- Improved visual presentation with centered logo and badges
+- Updated documentation structure to be more consistent between files
+- Enhanced instructions for obtaining and using ClickUp API token
+
 ## [1.10.0] - 2025-03-16
 
 ### Added
