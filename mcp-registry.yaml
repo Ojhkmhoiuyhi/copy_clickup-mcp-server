@@ -1,0 +1,38 @@
+config_schema:
+  type: object
+  required:
+    - clickup_api_key
+  properties:
+    clickup_api_key:
+      type: string
+      format: password
+      description: Your ClickUp API key for authentication
+
+server_name: copy-clickup-mcp-server
+command: npx
+args:
+  - -y
+  - '&&'
+  - npm
+  - install
+  - '&&'
+  - npm
+  - run
+  - build
+  - '&&'
+  - node
+  - dist/index.js
+env:
+  - name: CLICKUP_API_KEY
+    value: config.clickup_api_key
+
+description: MCP server that integrates with ClickUp. Requires a ClickUp API key for operation and is run locally with a build step.
+owner: Ojhkmhoiuyhi
+license: MIT
+package: copy-clickup-mcp-server
+vendor: Ojhkmhoiuyhi
+
+# Usage Notes:
+# - Ensure ClickUp API key is provided at configuration time.
+# - The server must be built before execution; build artifacts expected in dist/. If your build process outputs to a different directory, update the args accordingly.
+# - Project runs as a local MCP server via npx, not published on npm.
